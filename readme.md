@@ -113,7 +113,7 @@ const add = new Method([], {
     request:  Type.Tuple([ 
         Type.Number(), 
         Type.Number() 
-    ])
+    ]),
     response: Type.Number()
 }, (context, [a, b]) => {
     //
@@ -170,7 +170,7 @@ const service = new Service({
         request: Type.Tuple([
             Type.Number(), 
             Type.Number()
-        ],
+        ]),
         response: Type.Number()
     }, (context, [a, b]) => {
         return a + b
@@ -201,7 +201,7 @@ See the `example/client.ts` class that provides a basic implementation for a cli
 // -------------------------------------
 
 const service = new Service({
-    "add", new Method([], {
+    "add": new Method([], {
         request: Type.Tuple([
             Type.Number(),
             Type.Number()
