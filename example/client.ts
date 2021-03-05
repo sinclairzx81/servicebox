@@ -16,7 +16,7 @@ export class ServiceClient {
         return result.result as TResult
     }
 
-    /** Batch executes the several methods. */
+    /** Batch executes several methods. */
     public async batch(commands: { method: string, params: unknown }[]): Promise<RpcBatchResponse> {
         const headers: { [key: string]: string } = { 'Content-Type': 'application/json' }
         for(const [key, value] of this.headers) { headers[key] = value }
