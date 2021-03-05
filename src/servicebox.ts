@@ -29,7 +29,6 @@ THE SOFTWARE.
 import { Type, Static, TSchema, UnionToIntersect } from '@sinclair/typebox'
 import { IncomingMessage, ServerResponse }         from 'http'
 import addFormats                                  from 'ajv-formats'
-import fetch                                       from 'node-fetch'
 import Ajv, { ValidateFunction }                   from 'ajv'
 
 // ------------------------------------------------------------------------

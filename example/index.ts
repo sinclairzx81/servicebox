@@ -22,7 +22,9 @@ const service = new Service({
 
 import { createServer } from 'http'
 
-createServer((req, res) => service.request(req, res)).listen(5000)
+createServer((req, res) => {
+    service.request(req, res)
+}).listen(5000)
 
 // -----------------------------------------
 // ServiceClient
