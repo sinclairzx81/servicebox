@@ -17,7 +17,7 @@ const service = new Service({
             Type.Number(), 
             Type.Number()
         ]),
-        response: Type.String()
+        response: Type.Number()
     }, (context, [a, b]) => {
         return a + b
     })
@@ -142,7 +142,7 @@ const add = new Method([], {
         Type.Number(), 
         Type.Number() 
     ]),
-    response: Type.String()
+    response: Type.Number()
 }, (context, request) => {
     throw new NotImplementedException()
 })
