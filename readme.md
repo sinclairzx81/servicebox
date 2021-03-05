@@ -184,7 +184,9 @@ const service = new Service({
 
 const app = express()
 
-app.use('/api', (req, res) => service.request(req, res))
+app.use('/api', (req, res) => {
+    service.request(req, res))
+})
 
 app.listen(5000)
 ```
