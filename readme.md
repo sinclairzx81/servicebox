@@ -160,7 +160,7 @@ const add = new Method([], {
 
 ## Services
 
-Services are containers for methods. Services manage the request handling logic incoming requests to methods on the service. The following creates a service on the `/api` route using `express`. 
+Services are containers for methods. Services handle method routing logic as well as invoking calls on the requested method. The following example creates a service on the `/api` route using `express`. 
 
 ```typescript
 import { Service, Method, Type } from '@sinclair/servicebox'
