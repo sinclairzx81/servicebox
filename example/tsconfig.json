@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "moduleResolution": "node",
+        "target": "ESNext",
+        "baseUrl": ".",
+        "paths": {
+            "@sinclair/servicebox": ["../src/servicebox.ts"]
+        }
+    }, "files": [
+        "index.ts"
+    ]
+}

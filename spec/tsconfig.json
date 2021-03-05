@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+      "strict": true,
+      "target": "ESNext",
+      "moduleResolution": "node",
+      "removeComments": true,
+      "lib": ["ESNext"],
+      "alwaysStrict": true,
+      "outFile": "../spec.js",
+      "baseUrl": ".",
+      "paths": {
+        "@sinclair/servicebox": ["../src/servicebox.ts"]
+      }
+    },
+    "files": ["index.ts"]
+  }
