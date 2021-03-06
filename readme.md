@@ -31,9 +31,9 @@ app.use('/api', (req, res) => {
 ```
 ## Overview
 
-ServiceBox is a library for building type safe [JSON-RPC](https://www.jsonrpc.org/specification) Web Service methods in NodeJS. It offers a set of primitives which can be used to create methods whose requests are runtime checked via [JSON Schema](https://json-schema.org/) and statically checked via TypeScript within a methods implementation. 
+ServiceBox is a library for building type safe Web Services in NodeJS. It offers a set of web service types that are used to compose methods whose requests are runtime checked with [JSON Schema](https://json-schema.org/) and statically checked with TypeScript. ServiceBox is designed to allow for documentation and validation logic to be derived from a runtime type system based on JSON schema. This library can be used independently or integrated into existing applications via middleware.
 
-ServiceBox is designed to allow for method signatures, documentation and validation logic to be derived entirely from an underlying type system. This library can be used independently or integrated into existing applications via middleware. 
+Requires Node 14.x, TypeScript 4.2.x and above.
 
 License MIT
 
