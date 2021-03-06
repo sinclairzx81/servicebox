@@ -193,7 +193,7 @@ app.listen(5000)
 ```
 ## Testing
 
-You can run any method created on the service using the `service.execute()`. Callers are expected to pass a valid `context` and `request` object on the `execute()` function. Calls using `execute()` will bypass HTTP and invoke the method directly. As such the `context` object should match that of any middleware used the method.
+You can run any method created on the service using the services `execute()` function. Calls to `execute()` will bypass HTTP and invoke the method directly. As such the `context` object should match that of any middleware used the method. As follows.
 
 ```typescript
 export class Foo {
