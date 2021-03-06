@@ -179,6 +179,8 @@ export const RpcRequest = Type.Object({
     params:  Type.Unknown()
 })
 
+export type RpcResponse = RpcResult | RpcError
+
 export class RpcResult {
     public jsonrpc: string = '2.0'
     constructor(public readonly id: number | null,
@@ -207,7 +209,7 @@ export const RpcBatchRequest  = Type.Array(RpcRequest)
 
 export type  RpcBatchRequest  = Static<typeof RpcBatchRequest>
 
-export type  RpcBatchResponse = Array<RpcResult | RpcError>
+export type  RpcBatchResponse = Array<RpcResponse>
 
 // ------------------------------------------------------------------------
 // Validator
@@ -265,7 +267,7 @@ export class Service<T extends ServiceMethods> {
             this.#methods.set(name, [method, validator])
         })
     }
-
+    
     /** Executes a method on this service. */
     public async execute<K extends keyof T>(
         key: K, 
@@ -297,14 +299,23 @@ export class Service<T extends ServiceMethods> {
         })
     }
     
+    /** Writes a buffer to the http response stream. */
+    private async write_buffer(response: ServerResponse, buffer: Buffer): Promise<void> {
+        return new Promise(resolve => response.write(buffer, () => response.end(() => resolve())))
+    }
+
     /** Reads a json object from the http request stream. */
     private async read_request_object(request: IncomingMessage): Promise<unknown> {
         try {
+            if(request.headers['content-type'] !== 'application/json') {
+                const message = `Content-Type header not 'application/json'`
+                throw new ParseException({ message })
+            }
             const buffer = await this.read_buffer(request)
             const text = buffer.toString('utf8')
             return JSON.parse(text)
         } catch (error) {
-            throw new ParseException({})
+            throw new ParseException({ })
         }
     }
 
@@ -341,11 +352,13 @@ export class Service<T extends ServiceMethods> {
         }, {})
     }
 
-    /** Writes a buffer to the http response stream. */
-    private async write_buffer(response: ServerResponse, buffer: Buffer): Promise<void> {
-        return new Promise(resolve => response.write(buffer, () => response.end(() => resolve())))
+    /** Returns this services description as JSON. */
+    private async execute_rpc_metadata(request: IncomingMessage, response: ServerResponse) {
+        response.statusCode = 200
+        response.setHeader('Content-Type', 'application/json')
+        await this.write_buffer(response, Buffer.from(JSON.stringify(this.metadata, null, 2)))
     }
-
+    
     /** Writes an rpc response to the http response stream. */
     private async write_rpc_batch_response(response: ServerResponse, rpc_batch_response: RpcBatchResponse): Promise<void> {
         response.statusCode = 200
@@ -353,25 +366,15 @@ export class Service<T extends ServiceMethods> {
         await this.write_buffer(response, Buffer.from(JSON.stringify(rpc_batch_response)))
     }
 
-    /** Returns this services description as JSON. */
-    private async send_metadata(request: IncomingMessage, response: ServerResponse) {
-        response.statusCode = 200
-        response.setHeader('Content-Type', 'application/json')
-        await this.write_buffer(response, Buffer.from(JSON.stringify(this.metadata, null, 2)))
-    }
-    
-    private async execute_method(request: IncomingMessage, rpc_request: RpcRequest): Promise<RpcResult | RpcError> {
+    /** Executes a single rpc method. */
+    private async execute_rpc_method(request: IncomingMessage, rpc_request: RpcRequest): Promise<RpcResponse> {
         let id = null
         try {
             id = rpc_request.id || null
             const [method, validator] = this.get_method(rpc_request.method)
             this.validate_params(validator, rpc_request.params)
             const context = await this.read_context(request, method) as any
-            const result  = await this.execute(
-                rpc_request.method, 
-                context, 
-                rpc_request.params as any
-            )
+            const result  = await this.execute(rpc_request.method, context, rpc_request.params as any)
             return new RpcResult(id, result)
         } catch(error) {
             return !(error instanceof Exception)
@@ -381,12 +384,12 @@ export class Service<T extends ServiceMethods> {
     }
 
     /** Executes a method on this service. */
-    private async execute_batch(request: IncomingMessage, response: ServerResponse) {
+    private async execute_rpc_batch(request: IncomingMessage, response: ServerResponse) {
         try {
             const batch_rpc_request = await this.read_rpc_batch_request(request)
             const batch_rpc_response = []
             for(const rpc_request of batch_rpc_request) {
-                const result = await this.execute_method(request, rpc_request)
+                const result = await this.execute_rpc_method(request, rpc_request)
                 batch_rpc_response.push(result)
             }
             await this.write_rpc_batch_response(response, batch_rpc_response)
@@ -401,8 +404,8 @@ export class Service<T extends ServiceMethods> {
     /** Handles http request to this service. */
     public request(request: IncomingMessage, response: ServerResponse) {
         switch(request.method?.toLowerCase()) {
-            case 'get': return this.send_metadata(request, response)
-            case 'post': return this.execute_batch(request, response)
+            case 'get': return this.execute_rpc_metadata(request, response)
+            case 'post': return this.execute_rpc_batch(request, response)
             default: return this.write_buffer(response, Buffer.alloc(0))
         }
     }
