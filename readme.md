@@ -11,8 +11,12 @@
 ```typescript
 import { Service, Method, Type } from '@sinclair/servicebox'
 
+// -------------------------------------
+// Create
+// -------------------------------------
+
 const service = new Service({ 
-    "add": new Method([], {
+    'add': new Method([], {
         request: Type.Tuple([
             Type.Number(), 
             Type.Number()
@@ -21,12 +25,36 @@ const service = new Service({
     }, (context, [a, b]) => {
         return a + b
     })
- })
+})
 
+// -------------------------------------
+// Host
+// -------------------------------------
+
+const app = express()
 
 app.use('/api', (req, res) => {
+
     service.request(req, res)
 })
+
+app.listen(5000)
+
+// -------------------------------------
+// Call
+// -------------------------------------
+
+const results = await post('http://localhost:5000/api', [
+    { jsonrpc: '2.0', method: 'add', params: [10, 20] },
+    { jsonrpc: '2.0', method: 'add', params: [20, 30] },
+    { jsonrpc: '2.0', method: 'add', params: [30, 40] }
+])
+
+// results = [
+//   { jsonrpc: '2.0', id: null, result: 30 },
+//   { jsonrpc: '2.0', id: null, result: 50 },
+//   { jsonrpc: '2.0', id: null, result: 70 },
+// ]
 
 ```
 ## Overview
