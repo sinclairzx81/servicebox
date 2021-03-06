@@ -51,6 +51,7 @@ $ npm install @sinclair/servicebox
 - [Contracts](#Contracts)
 - [Exceptions](#Exceptions)
 - [Services](#Services)
+- [Testing](#Testing)
 - [Protocol](#Protocol)
 - [Metadata](#Metadata)
 
@@ -190,6 +191,40 @@ app.use('/api', (req, res) => {
 
 app.listen(5000)
 ```
+## Testing
+
+You can run any method created on the service using the `service.execute()`. Callers are expected to pass a valid `context` and `request` object on the `execute()` function. Calls using `execute()` will bypass HTTP and invoke the method directly. As such the `context` object should match that of any middleware used the method.
+
+```typescript
+export class Foo {
+    map() {
+        return { foo: 1 }
+    }
+}
+
+const service = new Service({
+    'add': new Method([new Foo()], {
+        request: Type.Tuple([
+            Type.Number(), 
+            Type.Number()
+        ]),
+        response: Type.Number()
+    }, (context, [a, b]) => {
+        return a + b
+    })
+})
+
+// -----------------------------------------
+// Tests
+// -----------------------------------------
+
+const response = await service.execute('add', { 
+    foo: 1 
+}, [1, 2])
+
+assert(response, 3)
+```
+
 ## Protocol
 
 ServiceBox implements the [JSON-RPC 2.0](https://www.jsonrpc.org/specification) specification. Requests to invoke a method must be sent via HTTP `POST` passing the `{ 'Content-Type': 'application/json' }` header and request payload. ServiceBox accepts requests as batched JSON-RPC requests.

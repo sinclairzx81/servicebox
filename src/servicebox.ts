@@ -233,19 +233,29 @@ export class Validator {
 }
 
 // ------------------------------------------------------------------------
-// Service
+// ServiceMethods
 // ------------------------------------------------------------------------
 
 export interface ServiceMethods {
     [name: string]: Method<MiddlewareArray, any, any>
 }
 
-export class Service<Methods extends ServiceMethods> {
+export type ServiceMethodContext<T>  = T extends Method<infer U, any, any> ? MiddlewareArrayContext<U> : never
+
+export type ServiceMethodRequest<T>  = T extends Method<any, infer U, any> ? Static<U> : never
+
+export type ServiceMethodResponse<T> = T extends Method<any, any, infer U> ? Static<U> : never
+
+// ------------------------------------------------------------------------
+// Service
+// ------------------------------------------------------------------------
+
+export class Service<T extends ServiceMethods> {
     readonly #methods:  Map<string, [Method<MiddlewareArray, any, any>, Validator]>
     readonly #protocol: Validator
 
     /** Constructs this service using the given methods. */
-    constructor(methods: Methods) {
+    constructor(methods: T) {
         this.#protocol = new Validator(RpcBatchRequest)
         this.#methods = new Map<string, [Method<MiddlewareArray, any, any>, Validator]>()
         Object.entries(methods).filter(([name, method]) => {
@@ -254,6 +264,18 @@ export class Service<Methods extends ServiceMethods> {
             const validator = new Validator(method.contract.request)
             this.#methods.set(name, [method, validator])
         })
+    }
+
+    /** Executes a method on this service. */
+    public async execute<K extends keyof T>(
+        key: K, 
+        context: ServiceMethodContext<T[K]>, 
+        request: ServiceMethodRequest<T[K]>
+    ): Promise<ServiceMethodResponse<T[K]>> {
+        const [method, validator] = this.get_method(key as string)
+        const [success, error] = validator.validate(request)
+        if(!success) throw new InvalidParamsException(error)
+        return method.execute(context, request)
     }
 
     /** Returns metadata for this service. */
@@ -295,9 +317,9 @@ export class Service<Methods extends ServiceMethods> {
     }
 
     /** Returns the method from the given rpc_request. */
-    private get_method(rpc_request: RpcRequest): [Method<MiddlewareArray, any, any>, Validator] {
-        if(!this.#methods.has(rpc_request.method)) throw new MethodNotFoundException({ method: rpc_request.method })
-        return this.#methods.get(rpc_request.method)!
+    private get_method(key: string): [Method<MiddlewareArray, any, any>, Validator] {
+        if(!this.#methods.has(key)) throw new MethodNotFoundException({ method: key })
+        return this.#methods.get(key)!
     }
 
     /** Validates the request parameters for a method. */
@@ -342,10 +364,14 @@ export class Service<Methods extends ServiceMethods> {
         let id = null
         try {
             id = rpc_request.id || null
-            const [method, validator] = this.get_method(rpc_request)
+            const [method, validator] = this.get_method(rpc_request.method)
             this.validate_params(validator, rpc_request.params)
-            const context = await this.read_context(request, method)
-            const result = await method.execute(context, rpc_request.params)
+            const context = await this.read_context(request, method) as any
+            const result  = await this.execute(
+                rpc_request.method, 
+                context, 
+                rpc_request.params as any
+            )
             return new RpcResult(id, result)
         } catch(error) {
             return !(error instanceof Exception)

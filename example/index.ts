@@ -2,19 +2,43 @@
 // Service
 // -----------------------------------------
 
-import { Service, Method, Type } from '@sinclair/servicebox'
+import { Service, Method, Type, Exception } from '@sinclair/servicebox'
 
-const service = new Service({ 
-    "add": new Method([], {
+class Foo {
+    ["create-user"] = new Method([], {
         request: Type.Tuple([
-            Type.Number(), 
+            Type.Number(),
             Type.Number()
         ]),
         response: Type.Number()
     }, (context, [a, b]) => {
         return a + b
     })
- })
+}
+
+export class Bar {
+    ["add"] = new Method([{
+        map: () => ({a: 1})
+    }], {
+        request: Type.Tuple([
+            Type.Number(),
+            Type.Number()
+        ]),
+        response: Type.Number()
+    }, (context, [a, b]) => {
+        return a + b
+    })
+}
+
+const service = new Service({
+    ...new Foo(),
+    ...new Bar()
+})
+
+service.execute('add', { 
+    a: 1
+}, [1, 2])
+
 
 // -----------------------------------------
 // Host
@@ -35,7 +59,7 @@ import { ServiceClient } from './client'
 const client = new ServiceClient('http://localhost:5000')
 
 async function test() {
-    for(let i = 0; i < 1000000; i++) {
+    for (let i = 0; i < 100; i++) {
         await client.execute('add', [i, i + 1])
             .then(console.log)
             .catch(console.log)
