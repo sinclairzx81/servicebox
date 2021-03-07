@@ -12,7 +12,7 @@
 import { Service, Method, Type } from '@sinclair/servicebox'
 
 // -------------------------------------
-// Create
+// Service
 // -------------------------------------
 
 const service = new Service({ 
