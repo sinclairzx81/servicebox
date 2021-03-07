@@ -28,6 +28,14 @@ const service = new Service({
 })
 
 // -------------------------------------
+// Test
+// -------------------------------------
+
+const result = await service.execute('add', {}, [1, 2])
+
+assert(result, 3)
+
+// -------------------------------------
 // Host
 // -------------------------------------
 
@@ -58,7 +66,7 @@ const results = await post('http://localhost:5000/api', [
 
 ServiceBox is a library for building type safe Web Services in NodeJS. It offers a set of web service types that are used to compose methods whose requests are runtime checked with [JSON Schema](https://json-schema.org/) and statically checked with TypeScript. ServiceBox is designed to allow for documentation and validation logic to be derived from a runtime type system based on JSON schema. This library can be used independently or integrated into existing applications via middleware.
 
-Requires Node 14.x, TypeScript 4.2.x and above.
+Built wih Node 14 and TypeScript 4.2 and above.
 
 License MIT
 
