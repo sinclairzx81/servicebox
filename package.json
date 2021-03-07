@@ -1,6 +1,6 @@
 {
   "name": "@sinclair/servicebox",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "description": "Typed Web Services for NodeJS",
   "main": "./servicebox.js",
   "types": "./servicebox.d.ts",
