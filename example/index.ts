@@ -4,17 +4,6 @@
 
 import { Service, Method, Type, Exception } from '@sinclair/servicebox'
 
-class Foo {
-    ["create-user"] = new Method([], {
-        request: Type.Tuple([
-            Type.Number(),
-            Type.Number()
-        ]),
-        response: Type.Number()
-    }, (context, [a, b]) => {
-        return a + b
-    })
-}
 
 export class Bar {
     ["add"] = new Method([{
@@ -29,6 +18,19 @@ export class Bar {
         return a + b
     })
 }
+
+class Foo {
+    ["sub"] = new Method([], {
+        request: Type.Tuple([
+            Type.Number(),
+            Type.Number()
+        ]),
+        response: Type.Number()
+    }, (context, [a, b]) => {
+        return a - b
+    })
+}
+
 
 const service = new Service({
     ...new Foo(),
@@ -46,9 +48,7 @@ service.execute('add', {
 
 import { createServer } from 'http'
 
-createServer((req, res) => {
-    service.request(req, res)
-}).listen(5000)
+createServer((req, res) => service.request(req, res)).listen(5000)
 
 // -----------------------------------------
 // ServiceClient
