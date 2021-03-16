@@ -2,10 +2,9 @@
 // Service
 // -----------------------------------------
 
-import { Service, Method, Type, Exception } from '@sinclair/servicebox'
+import { Service, Method, Type } from '@sinclair/servicebox'
 
-
-export class Bar {
+export class Foo {
     ["add"] = new Method([{
         map: () => ({a: 1})
     }], {
@@ -19,28 +18,9 @@ export class Bar {
     })
 }
 
-class Foo {
-    ["sub"] = new Method([], {
-        request: Type.Tuple([
-            Type.Number(),
-            Type.Number()
-        ]),
-        response: Type.Number()
-    }, (context, [a, b]) => {
-        return a - b
-    })
-}
-
-
 const service = new Service({
-    ...new Foo(),
-    ...new Bar()
+    ...new Foo()
 })
-
-service.execute('add', { 
-    a: 1
-}, [1, 2])
-
 
 // -----------------------------------------
 // Host
@@ -51,19 +31,18 @@ import { createServer } from 'http'
 createServer((req, res) => service.request(req, res)).listen(5000)
 
 // -----------------------------------------
-// ServiceClient
+// simple client
 // -----------------------------------------
 
-import { ServiceClient } from './client'
-
-const client = new ServiceClient('http://localhost:5000')
+import { post } from './post'
 
 async function test() {
-    for (let i = 0; i < 100; i++) {
-        await client.execute('add', [i, i + 1])
-            .then(console.log)
-            .catch(console.log)
-    }
+    const response = await post('http://localhost:5000', [
+        { jsonrpc: '2.0', method: 'add', params: [10, 20] },
+        { jsonrpc: '2.0', method: 'add', params: [20, 30] },
+        { jsonrpc: '2.0', method: 'add', params: [30, 40] }
+    ])
+    console.log(response)
 }
 test()
 
