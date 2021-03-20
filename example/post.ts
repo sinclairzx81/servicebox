@@ -2,7 +2,8 @@
 import fetch from 'node-fetch'
 
 export interface JsonRpcRequest {
-    jsonrpc: '2.0',
+    jsonrpc: '2.0'
+    id?: number
     method: string
     params: unknown
 }

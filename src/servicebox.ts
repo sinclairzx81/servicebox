@@ -370,7 +370,7 @@ export class Service<T extends ServiceMethods> {
     private async execute_rpc_method(request: IncomingMessage, rpc_request: RpcRequest): Promise<RpcResponse> {
         let id = null
         try {
-            id = rpc_request.id || null
+            id = rpc_request.id === undefined ? null : rpc_request.id
             const [method, validator] = this.get_method(rpc_request.method)
             this.validate_params(validator, rpc_request.params)
             const context = await this.read_context(request, method) as any
