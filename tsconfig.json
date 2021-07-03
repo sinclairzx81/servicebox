@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "module": "CommonJS",
+        "target": "ESNext",
+        "moduleResolution": "node",
+        "downlevelIteration": true,
+        "lib": ["ESNext"],
+        "declaration": true,
+        "baseUrl": ".",
+        "paths": {
+            "@sinclair/servicebox": ["src/servicebox.ts"]
+        }
+    }
+}

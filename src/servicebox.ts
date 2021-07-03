@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Type, Static, TSchema, UnionToIntersect } from '@sinclair/typebox'
+import { Type, Static, TSchema, UnionToIntersect, TBox, TDefinitions } from '@sinclair/typebox'
 import { IncomingMessage, ServerResponse }         from 'http'
 import addFormats                                  from 'ajv-formats'
 import Ajv, { ValidateFunction }                   from 'ajv'
@@ -216,17 +216,18 @@ export type  RpcBatchResponse = Array<RpcResponse>
 // ------------------------------------------------------------------------
 
 export class Validator {
-    private static ajv = addFormats(new Ajv({ allErrors: true }), [
-        'date-time', 'time', 'date', 'email', 'hostname', 
-        'ipv4', 'ipv6', 'uri', 'uri-reference', 'uuid', 
-        'uri-template', 'json-pointer',  'relative-json-pointer', 
-        'regex'
-    ]).addKeyword('kind').addKeyword('modifier')
-    
-    readonly #validate:  ValidateFunction
-
-    constructor(public readonly schema: TSchema) {
-        this.#validate  = Validator.ajv.compile(schema)
+    readonly #validate: ValidateFunction
+    readonly #ajv: Ajv
+    constructor(public readonly schema: TSchema, private readonly boxes: TBox<TDefinitions>[]) {
+        this.#ajv = addFormats(new Ajv({ allErrors: true }), [
+            'date-time', 'time', 'date', 'email', 'hostname', 
+            'ipv4', 'ipv6', 'uri', 'uri-reference', 'uuid', 
+            'uri-template', 'json-pointer',  'relative-json-pointer', 
+            'regex'
+        ]).addKeyword('kind')
+          .addKeyword('modifier')
+          .addSchema(boxes)
+        this.#validate = this.#ajv.compile(schema)
     }
     /** Validates the given data against this validators schema. */
     public validate (data: unknown): [boolean, unknown] {
@@ -257,13 +258,13 @@ export class Service<T extends ServiceMethods> {
     readonly #protocol: Validator
 
     /** Constructs this service using the given methods. */
-    constructor(methods: T) {
-        this.#protocol = new Validator(RpcBatchRequest)
+    constructor(boxes: TBox<TDefinitions>[], methods: T) {
+        this.#protocol = new Validator(RpcBatchRequest, boxes)
         this.#methods = new Map<string, [Method<MiddlewareArray, any, any>, Validator]>()
         Object.entries(methods).filter(([name, method]) => {
             return method instanceof Method
         }).forEach(([name, method]) => {
-            const validator = new Validator(method.contract.request)
+            const validator = new Validator(method.contract.request, boxes)
             this.#methods.set(name, [method, validator])
         })
     }

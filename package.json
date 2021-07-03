@@ -1,6 +1,6 @@
 {
   "name": "@sinclair/servicebox",
-  "version": "0.8.9",
+  "version": "0.8.10",
   "description": "Typed Web Services for NodeJS",
   "main": "./servicebox.js",
   "types": "./servicebox.d.ts",
@@ -21,25 +21,23 @@
   },
   "homepage": "https://github.com/sinclairzx81/servicebox#readme",
   "scripts": {
-    "clean": "smoke-task clean",
-    "start": "smoke-task start",
-    "build": "smoke-task build",
-    "test": "smoke-task spec"
+    "clean": "hammer task clean",
+    "start": "hammer task start",
+    "build": "hammer task build",
+    "test": "hammer task spec"
   },
   "dependencies": {
-    "@sinclair/typebox": "^0.16.4",
+    "@sinclair/typebox": "^0.17.4",
     "ajv": "^7.1.1",
     "ajv-formats": "^1.5.1"
   },
   "devDependencies": {
+    "@sinclair/hammer": "^0.12.1",
     "@types/mocha": "^8.2.1",
     "@types/node": "^14.14.31",
     "@types/node-fetch": "^2.5.8",
     "mocha": "^8.3.0",
     "node-fetch": "^2.6.1",
-    "smoke-run": "^1.1.2",
-    "smoke-task": "^1.1.4",
-    "typescript": "^4.2.3",
-    "typescript-bundle": "^1.0.17"
+    "typescript": "^4.2.3"
   }
 }

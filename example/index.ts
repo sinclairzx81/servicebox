@@ -4,23 +4,24 @@
 
 import { Service, Method, Type } from '@sinclair/servicebox'
 
+export const Box = Type.Box('math3d', {
+    Vector2: Type.Tuple([Type.Number(), Type.Number()])
+})
+
 export class Foo {
     ["add"] = new Method([{
         map: () => ({a: 1})
     }], {
-        request: Type.Tuple([
-            Type.Number(),
-            Type.Number()
-        ]),
+        request: Type.Ref(Box, 'Vector2'),
         response: Type.Number()
-    }, (context, [a, b]) => {
-        return a + b
+    }, (context, [x, y]) => {
+        return x + y
     })
 }
 
 const service = new Service({
     ...new Foo()
-})
+}, [Box])
 
 // -----------------------------------------
 // Host
