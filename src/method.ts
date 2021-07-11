@@ -26,10 +26,11 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TFunction, TBox, TSchema, Static }        from '@sinclair/typebox'
-import { MiddlewareArrayContext, MiddlewareArray } from './middleware'
-import addFormats                                  from 'ajv-formats'
-import Ajv, { ValidateFunction }                   from 'ajv'
+import { TFunction, TBox, TSchema, Static }                           from '@sinclair/typebox'
+import { MiddlewareArrayContext, MiddlewareArray }                    from './middleware'
+import addFormats                                                     from 'ajv-formats'
+import Ajv, { ValidateFunction }                                      from 'ajv'
+import { Exception, InternalErrorException, InvalidParamsException, InvalidRequestException } from './exception'
 
 // ------------------------------------------------------------------------
 // Static Inference
@@ -37,8 +38,7 @@ import Ajv, { ValidateFunction }                   from 'ajv'
 
 export type MethodReturn<F> = 
     F extends TFunction<any, infer R> ?
-        R extends TSchema ? 
-            Static<R> | Promise<Static<R>>
+        R extends TSchema ? Static<R>
         : never
     : never
 
@@ -54,12 +54,12 @@ export type MethodArguments<M, F> =
         : never
     : never
 
-export type MethodBody<M, F> =
+export type MethodCallback<M, F> =
     M extends MiddlewareArray ?
         F extends TFunction<infer P, infer R> ?
             P extends TSchema[] ?
                 R extends TSchema ?
-                    (...args: MethodArguments<M, F>) => MethodReturn<F>
+                    (...args: MethodArguments<M, F>) => Promise<MethodReturn<F>> | MethodReturn<F>
                 : never 
             : never 
         : never
@@ -71,25 +71,51 @@ export type MethodBody<M, F> =
 // ------------------------------------------------------------------------
 
 export class Method<M extends MiddlewareArray, F extends TFunction<TSchema[], TSchema>> {
-    private readonly validators: ValidateFunction<unknown>[]
+    private readonly paramsValidators: ValidateFunction<unknown>[]
+    private readonly returnsValidator: ValidateFunction<unknown>
     constructor(
-        private readonly middleware: M,
-        private readonly signature:  F,
-        private readonly body:       MethodBody<M, F>,
-        private readonly boxes:      TBox<any>[]
-    ) { 
+        public readonly middleware: M,
+        public readonly signature:  F,
+        public readonly callback:   MethodCallback<M, F>
+    ) {
         const ajv = addFormats(new Ajv({ allErrors: true }), [
             'date-time', 'time', 'date', 'email', 'hostname', 
             'ipv4', 'ipv6', 'uri', 'uri-reference', 'uuid', 
             'uri-template', 'json-pointer',  'relative-json-pointer', 
             'regex'
         ]).addKeyword('kind').addKeyword('modifier')
-        this.boxes.forEach(box => ajv.addSchema(box))
-        this.validators = signature.arguments.map(schema => ajv.compile(schema))
+        this.paramsValidators = signature.arguments.map(schema => ajv.compile(schema))
+        this.returnsValidator = ajv.compile(signature.returns)
     }
 
-    public execute(...args: MethodArguments<M, F>): MethodReturn<F> {
-        // todo: implement execute function
-        throw 1
+    private assertParameters(values: unknown[]) {
+        try {
+            for(let i = 0; i < values.length; i++) {
+                const validator = this.paramsValidators[i]
+                const param     = values[i]
+                if(!validator(param)) throw new InvalidParamsException(validator.errors)
+            }
+        } catch(error) {
+            if(error instanceof Exception) {
+                throw error
+            } else {
+                throw new InvalidRequestException('Invalid Request')
+            }
+        }
+    }
+
+    private assertReturns(value: unknown) {
+        if(!this.returnsValidator(value)) {
+            throw new InternalErrorException('Method returned unexpected value')
+        }
+    }
+
+    /** Executes this function with the given params */
+    public async execute(...params: MethodArguments<M, F>): Promise<MethodReturn<F>> {
+        this.assertParameters(params.slice(1))
+        const facade = params as MethodArguments<M, F>
+        const result = await this.callback.apply(null, facade)
+        this.assertReturns(result)
+        return result as MethodReturn<F>
     }
 }
