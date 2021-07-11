@@ -11,14 +11,27 @@
 ```typescript
 import { Host, Context, Type } from '@sinclair/servicebox'
 
-export const Add = Type.Function([Type.Number(), Type.Number()], Type.Number())
+// ------------------------------------------------------
+// Functions
+// ------------------------------------------------------
 
+export const Add = Type.Function([Type.Number(), Type.Number()], Type.Number())
+export const Sub = Type.Function([Type.Number(), Type.Number()], Type.Number())
+
+// ------------------------------------------------------
+// Service
+// ------------------------------------------------------
 export class Service {
 
     private readonly context = new Context([])
-    
+
     public add = this.context.method(Add, (context, a, b) => a + b)
+    public sub = this.context.method(Sub, (context, a, b) => a - b)
 }
+
+// ------------------------------------------------------
+// Host
+// ------------------------------------------------------
 
 const host = new Host(new Service())
 
