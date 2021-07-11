@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Type, Static, TSchema, UnionToIntersect } from '@sinclair/typebox'
+import { Type, Static, TSchema, UnionToIntersect, TFunction, TBox } from '@sinclair/typebox'
 import { IncomingMessage, ServerResponse }         from 'http'
 import addFormats                                  from 'ajv-formats'
 import Ajv, { ValidateFunction }                   from 'ajv'
@@ -58,47 +58,57 @@ export type MiddlewareArrayContext<T extends MiddlewareArray> = UnionToIntersect
 
 }[number]>
 
-
-// ------------------------------------------------------------------------
-// Contract
-// ------------------------------------------------------------------------
-
-export type Contract<
-    Request  extends TSchema, 
-    Response extends TSchema
-> = {
-    description?: string,
-    request:  Request,
-    response: Response
-}
-
 // ------------------------------------------------------------------------
 // MethodBody
 // ------------------------------------------------------------------------
 
-export type MethodBody<
-    Middleware extends MiddlewareArray,
-    Request    extends TSchema,
-    Response   extends TSchema
-> = (
-    context:  MiddlewareArrayContext<Middleware>,
-    request:  Static<Request>,
-) => Promise<Static<Response>> | Static<Response>
+export type MethodBody<M, F> =
+    M extends MiddlewareArray ?
+        F extends TFunction<infer P, infer R> ?
+            P extends TSchema[] ?
+                R extends TSchema   ?
+                    (context: MiddlewareArrayContext<M>, ...args: [...{ [K in keyof P]: Static<P[K]> }]) => Static<R> | Promise<Static<R>>
+                : never 
+            : never 
+        : never
+    : never
+
+export type MethodArguments<M, F> =
+    M extends MiddlewareArray ?
+        F extends TFunction<infer P, infer R> ?
+            P extends TSchema[] ?
+                R extends TSchema   ?
+                    [MiddlewareArrayContext<M>, ...{ [K in keyof P]: Static<P[K]> }]
+                : never 
+            : never 
+        : never
+    : never
 
 // ------------------------------------------------------------------------
 // Method
 // ------------------------------------------------------------------------
 
-export class Method<
-    Middleware extends MiddlewareArray,
-    Request    extends TSchema,
-    Response   extends TSchema
-> {
+export class Method<M extends MiddlewareArray, S extends TFunction<TSchema[], TSchema>> {
+    private readonly validators: ValidateFunction<unknown>[]
     constructor(
-        public readonly middleware: Middleware,
-        public readonly contract:   Contract<Request, Response>,
-        public readonly execute:    MethodBody<Middleware, Request, Response>
-    ) { }
+        private readonly middleware: M,
+        private readonly signature:  S,
+        private readonly body:       MethodBody<M, S>,
+        private readonly boxes:      TBox<any>[]
+    ) { 
+        const ajv = addFormats(new Ajv({ allErrors: true }), [
+            'date-time', 'time', 'date', 'email', 'hostname', 
+            'ipv4', 'ipv6', 'uri', 'uri-reference', 'uuid', 
+            'uri-template', 'json-pointer',  'relative-json-pointer', 
+            'regex'
+        ]).addKeyword('kind').addKeyword('modifier')
+        this.boxes.forEach(box => ajv.addSchema(box))
+        this.validators = signature.arguments.map(schema => ajv.compile(schema))
+    }
+
+    public execute(...args: MethodArguments<M, S>) {
+
+    }
 }
 
 // ------------------------------------------------------------------------
@@ -108,20 +118,11 @@ export class Method<
 export class Context<Middleware extends MiddlewareArray> {
     constructor(
         public readonly middleware: Middleware
-    ) {}
-
-    public method<
-        Request  extends TSchema, 
-        Response extends TSchema
-    >(
-        contract: Contract<Request, Response>, 
-        execute:  MethodBody<Middleware, Request, Response>
-    ) {
-        return new Method(
-            this.middleware, 
-            contract, 
-            execute
-        )
+    ) { }
+    
+    /** Creates a new method for this context */
+    public method<S extends TFunction<any[], any>>(signature: S, body: MethodBody<Middleware, S>, boxes: TBox<any>[] = []) {
+        return new Method(this.middleware, signature, body, boxes)
     }
 }
 
@@ -263,7 +264,8 @@ export class Service<T extends ServiceMethods> {
         Object.entries(methods).filter(([name, method]) => {
             return method instanceof Method
         }).forEach(([name, method]) => {
-            const validator = new Validator(method.contract.request)
+            const [request, response] = method.contract
+            const validator = new Validator(request)
             this.#methods.set(name, [method, validator])
         })
     }
@@ -281,8 +283,8 @@ export class Service<T extends ServiceMethods> {
     }
 
     /** Returns metadata for this service. */
-    public get metadata(): {[method: string]: Contract<any, any> } {
-        const metadata = {} as {[method: string]: Contract<any, any> }
+    public get metadata(): {[method: string]: [any, any] } {
+        const metadata = {} as {[method: string]: [any, any] }
         for(const [name, [method]] of this.#methods) {
             metadata[name] = method.contract
         }

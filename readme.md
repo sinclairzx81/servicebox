@@ -2,36 +2,54 @@
 
 <h1>ServiceBox</h1>
 
-<p>Typed Web Services for NodeJS</p>
+<p>Type Safe Web Services for Node</p>
 
 [![npm version](https://badge.fury.io/js/%40sinclair%2Fservicebox.svg)](https://badge.fury.io/js/%40sinclair%2Fservicebox) [![GitHub CI](https://github.com/sinclairzx81/servicebox/workflows/GitHub%20CI/badge.svg)](https://github.com/sinclairzx81/servicebox/actions)
 
 </div>
 
 ```typescript
-import { Service, Method, Type } from '@sinclair/servicebox'
+import { Service, Context, Type } from '@sinclair/servicebox'
 
-// -------------------------------------
-// Service
-// -------------------------------------
+// -----------------------------------------------------------------
+//
+// Define the Add Function
+//
+// type Add = (a: number, b: number) => number
+//
+// -----------------------------------------------------------------
 
-const service = new Service({ 
-    'add': new Method([], {
-        request: Type.Tuple([
-            Type.Number(), 
-            Type.Number()
-        ]),
-        response: Type.Number()
-    }, (context, [a, b]) => {
-        return a + b
-    })
+export const Add = Type.Function([Type.Number(), Type.Number()], Type.Number())
+
+// -----------------------------------------------------------------
+//
+// Create a Web Service
+//
+// -----------------------------------------------------------------
+
+export class MathService {
+
+    private readonly context = new Context([])
+
+    public ['add'] = this.context.method(Add, (context, a, b) => a + b)
+}
+
+// -----------------------------------------------------------------
+//
+// Host the service
+//
+// -----------------------------------------------------------------
+
+const service = new Service({
+
+    'math': new MathService()
 })
 
 // -------------------------------------
 // Test
 // -------------------------------------
 
-const result = await service.execute('add', {}, [1, 2])
+const result = await service.execute('math/add', {}, 1, 2)
 
 assert(result, 3)
 
@@ -64,7 +82,9 @@ const results = await post('http://localhost:5000/api', [
 ```
 ## Overview
 
-ServiceBox is a library for building type safe Web Services in NodeJS. It offers a set of web service types that are used to compose methods whose requests are runtime checked with [JSON Schema](https://json-schema.org/) and statically checked with TypeScript. ServiceBox is designed to allow for documentation and validation logic to be derived from a runtime type system based on JSON schema. This library can be used independently or integrated into existing applications via middleware.
+ServiceBox is a library for building type safe Web Services in NodeJS. It allows one to strictly define a Web Service function and will automatically validate Web Requests to that function using JSON schema. It is designed with TypeScript in mind and provides automatic type inference for all functions and ensures the TypeScript implementation matches the expected data received for the function.
+
+ServiceBox also provides function middleware. Middleware specifically maps HTTP requests to a contextual object to each function. This functionality allows functions to operate under the context of user, essential for multi user role based authorization.
 
 Built with TypeScript 4.2 and Node 14 LTS.
 
