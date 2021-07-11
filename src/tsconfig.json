@@ -8,6 +8,6 @@
       "declaration": true,
     },
     "files": [
-      "servicebox.ts"
+      "index.ts"
     ]
   }

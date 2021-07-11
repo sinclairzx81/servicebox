@@ -5,7 +5,7 @@
         "target": "ESNext",
         "baseUrl": ".",
         "paths": {
-            "@sinclair/servicebox": ["../src/servicebox.ts"]
+            "@sinclair/servicebox": ["../src/index.ts"]
         }
     }, "files": [
         "index.ts"

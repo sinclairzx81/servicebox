@@ -3,36 +3,31 @@ import * as http from 'http'
 // Service
 // -----------------------------------------
 
-import { Service, Type, Context } from '@sinclair/servicebox'
+import { Host, Type, Context } from '@sinclair/servicebox'
 
-const Space = Type.Box('Space', {
-    Number: Type.Number()
-})
 
 // Define a method signature
-export const Add = Type.Function([
-    Type.Tuple([Type.Ref(Space, 'Number'), Type.String()])
-], Type.Number())
+export const Add = Type.Function([Type.Number(), Type.Number()], Type.Number())
 
 export class MathService {
 
     // Define a method context.
     private readonly context = new Context([ 
-        { map: () => ({a: 1}) }
+        { map: () => ({username: 'dave'}) }
     ])
 
     // Define a method
-    public add = this.context.method(Add, (context, a) => {
-
-        throw 1
-
-    }, [Space])
+    public add = this.context.method(Add, (context, a, b) => {
+        return a + b
+    })
 }
 
 
 const service = new MathService()
 
-service.add.execute({a: 1}, [1, '1'])
+service.add.execute({
+    username: 'dave'
+}, 1, 2)
 
 console.log(service)
 
