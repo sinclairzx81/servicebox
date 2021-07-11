@@ -88,7 +88,7 @@ export class Method<M extends MiddlewareArray, F extends TFunction<TSchema[], TS
         this.returnsValidator = ajv.compile(signature.returns)
     }
 
-    private assertParameters(values: unknown[]) {
+    private assertParams(values: unknown[]) {
         try {
             for(let i = 0; i < values.length; i++) {
                 const validator = this.paramsValidators[i]
@@ -109,12 +109,11 @@ export class Method<M extends MiddlewareArray, F extends TFunction<TSchema[], TS
             throw new InternalErrorException('Method returned unexpected value')
         }
     }
-
+    
     /** Executes this function with the given params */
     public async execute(...params: MethodArguments<M, F>): Promise<MethodReturn<F>> {
-        this.assertParameters(params.slice(1))
-        const facade = params as MethodArguments<M, F>
-        const result = await this.callback.apply(null, facade)
+        this.assertParams(params.slice(1))
+        const result = await this.callback.apply(null, params)
         this.assertReturns(result)
         return result as MethodReturn<F>
     }

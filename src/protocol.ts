@@ -30,45 +30,61 @@ import { Type, Static } from '@sinclair/typebox'
 import { Exception } from './exception'
 
 // ------------------------------------------------------------------------
-// Protocol Request Response
+// Json Rpc Schematics
 // ------------------------------------------------------------------------
 
-export type RpcRequest = Static<typeof RpcRequest>
-export const RpcRequest = Type.Object({
+export type ProtocolRequest = Static<typeof ProtocolRequest>
+export const ProtocolRequest = Type.Object({
     jsonrpc: Type.Literal("2.0"),
     id:      Type.Optional(Type.Number()),
     method:  Type.String(),
-    params:  Type.Unknown()
+    params:  Type.Array(Type.Unknown())
 })
 
-export type RpcResponse = RpcResult | RpcError
+export type ProtocolResult = Static<typeof ProtocolResult>
+export const ProtocolResult = Type.Object({
+    jsonrpc: Type.Literal("2.0"),
+    id:      Type.Union([Type.Number(), Type.Null()]),
+    result:  Type.Unknown()
+})
 
-export class RpcResult {
-    public jsonrpc: string = '2.0'
-    constructor(public readonly id: number | null,
-                public readonly result: unknown) {}
-}
+export type ProtocolError = Static<typeof ProtocolError>
+export const ProtocolError = Type.Object({
+    jsonrpc: Type.Literal("2.0"),
+    error: Type.Object({
+        code: Type.Number(),
+        message: Type.String(),
+        data: Type.Unknown()
+    })
+})
 
-export class RpcError {
-    public jsonrpc: string = '2.0'
-    constructor(public id: number | null, 
-                public error: { 
-                    code: number, 
-                    message: string, 
-                    data: unknown 
-                }) {}
+export type ProtocolResponse = Static<typeof ProtocolResponse>
+export const ProtocolResponse = Type.Union([ProtocolResult, ProtocolError])
 
-    public static from_exception(id: number | null, exception: Exception) {
-        return new RpcError(id, {
-            code: exception.code,
-            data: exception.data,
-            message: exception.message
-        })
+export type BatchProtocolRequest = Static<typeof BatchProtocolRequest>
+export const BatchProtocolRequest   = Type.Array(ProtocolRequest)
+
+export type BatchProtocolResponse = Static<typeof BatchProtocolResponse>
+export const BatchProtocolResponse  = Type.Array(ProtocolResponse)
+
+
+// -----------------------------------------------------------------------
+// Protocol Parser
+// -----------------------------------------------------------------------
+
+export class Protocol {
+
+    public readBatchProtocolRequest(data: unknown): BatchProtocolRequest {
+        throw 1
     }
+
+    public writeProtocolResult(id: number, data: unknown): ProtocolResult {
+        throw 1
+    }
+
+    public writeProtocolError(id: number, error: Error): ProtocolError {
+        throw 1
+    }
+
+    
 }
-
-export const RpcBatchRequest  = Type.Array(RpcRequest)
-
-export type  RpcBatchRequest  = Static<typeof RpcBatchRequest>
-
-export type  RpcBatchResponse = Array<RpcResponse>
