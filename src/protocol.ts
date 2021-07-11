@@ -67,24 +67,3 @@ export const BatchProtocolRequest   = Type.Array(ProtocolRequest)
 export type BatchProtocolResponse = Static<typeof BatchProtocolResponse>
 export const BatchProtocolResponse  = Type.Array(ProtocolResponse)
 
-
-// -----------------------------------------------------------------------
-// Protocol Parser
-// -----------------------------------------------------------------------
-
-export class Protocol {
-
-    public readBatchProtocolRequest(data: unknown): BatchProtocolRequest {
-        throw 1
-    }
-
-    public writeProtocolResult(id: number, data: unknown): ProtocolResult {
-        throw 1
-    }
-
-    public writeProtocolError(id: number, error: Error): ProtocolError {
-        throw 1
-    }
-
-    
-}

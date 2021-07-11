@@ -26,11 +26,11 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TFunction, TBox, TSchema, Static }                           from '@sinclair/typebox'
-import { MiddlewareArrayContext, MiddlewareArray }                    from './middleware'
-import addFormats                                                     from 'ajv-formats'
-import Ajv, { ValidateFunction }                                      from 'ajv'
-import { Exception, InternalErrorException, InvalidParamsException, InvalidRequestException } from './exception'
+import { TFunction, TSchema, Static }              from '@sinclair/typebox'
+import { MiddlewareArrayContext, MiddlewareArray } from './middleware'
+import addFormats                                  from 'ajv-formats'
+import Ajv, { ValidateFunction }                   from 'ajv'
+import * as exception                              from './exception'
 
 // ------------------------------------------------------------------------
 // Static Inference
@@ -93,23 +93,23 @@ export class Method<M extends MiddlewareArray, F extends TFunction<TSchema[], TS
             for(let i = 0; i < values.length; i++) {
                 const validator = this.paramsValidators[i]
                 const param     = values[i]
-                if(!validator(param)) throw new InvalidParamsException(validator.errors)
+                if(!validator(param)) throw new exception.InvalidParamsException(validator.errors)
             }
         } catch(error) {
-            if(error instanceof Exception) {
-                throw error
+            if(!(error instanceof exception.Exception)) {
+                throw new exception.InvalidRequestException({ })
             } else {
-                throw new InvalidRequestException('Invalid Request')
+                throw error
             }
         }
     }
 
     private assertReturns(value: unknown) {
         if(!this.returnsValidator(value)) {
-            throw new InternalErrorException('Method returned unexpected value')
+            throw new exception.InternalErrorException('Method returned unexpected value')
         }
     }
-    
+
     /** Executes this function with the given params */
     public async execute(...params: MethodArguments<M, F>): Promise<MethodReturn<F>> {
         this.assertParams(params.slice(1))

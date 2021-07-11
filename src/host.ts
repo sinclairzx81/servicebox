@@ -26,35 +26,83 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import * as http     from 'http'
-import * as protocol from './protocol'
-import { Method } from './method'
+import Ajv, { ValidateFunction } from 'ajv'
+import { Method }                from './method'
+import * as http                 from 'http'
+import * as exception            from './exception'
+import * as protocol             from './protocol'
 
 export interface Methods {
-    [name: string]: Method<any[], any>
+    [name: string]: any
 }
 
-export class Host<MS extends Methods> {
-    constructor(private readonly methods: MS) {
-
+export class Host {
+    private readonly protocolRequestValidator: ValidateFunction<unknown>
+    private readonly protocolResponseValidator: ValidateFunction<unknown>
+    private readonly methods: Map<string, Method<any[], any>>
+    
+    constructor(methods: Methods) {
+        const ajv = new Ajv().addKeyword('kind').addKeyword('modifier')
+        this.protocolRequestValidator  = ajv.compile(protocol.BatchProtocolRequest)
+        this.protocolResponseValidator = ajv.compile(protocol.BatchProtocolResponse)
+        this.methods = new Map<string, Method<any[], any>>()
+        for(const [name, method] of Object.entries(methods)) {
+            if(!(method instanceof Method)) continue
+            this.methods.set(name, method)
+        }
     }
 
-    public readBatchProtocolRequest(request: http.IncomingMessage, data: unknown): protocol.BatchProtocolRequest {
-        throw 1
+    /** Reads a buffer from the http request stream. */
+    private readBuffer(request: http.IncomingMessage): Promise<Buffer> {
+        return new Promise((resolve, reject) => {
+            const buffers = [] as Buffer[]
+            request.on('data',  buffer => buffers.push(buffer))
+            request.on('error', error  => reject(error))
+            request.on('end',   ()     => resolve(Buffer.concat(buffers)))
+        })
+    }
+    
+    /** Writes a buffer to the http response stream. */
+    private async writeBuffer(response: http.ServerResponse, buffer: Buffer): Promise<void> {
+        return new Promise(resolve => response.write(buffer, () => response.end(() => resolve())))
     }
 
-    public writeProtocolResult(id: number, data: unknown): protocol.ProtocolResult {
-        throw 1
+    /** Reads a json object from the http request stream. */
+    private async readBatchProtocolRequest(request: http.IncomingMessage): Promise<protocol.BatchProtocolRequest> {
+        try {
+            if(request.headers['content-type'] !== 'application/json') {
+                const message = `Content-Type header not 'application/json'`
+                throw new exception.ParseException({ message })
+            }
+            const buffer = await this.readBuffer(request)
+            const text = buffer.toString('utf8')
+            const data = JSON.parse(text)
+            if(!this.protocolRequestValidator(data)) {
+                throw new exception.InvalidRequestException({ })
+            }
+            return data as protocol.BatchProtocolRequest
+        } catch (error) {
+            if(!(error instanceof exception.Exception)) {
+                throw new exception.InternalErrorException({ })
+            } else {
+                throw error
+            }
+        }
     }
 
-    public writeProtocolError(id: number, error: Error): protocol.ProtocolError {
-        throw 1
+    private async writeBatchProtocolResponse(response: http.ServerResponse) {
+        // todo: implement server response
     }
 
-    public listen(port: number) {
-        http.createServer((request, response) => {
+    public request(request: http.IncomingMessage, response: http.ServerResponse) {
+        // todo: implement request logic here
+    }
 
-        }).listen(5000)
+    public listen(port: number, hostname: string = '0.0.0.0') {
+       return new Promise<void>((resolve, reject) => {
+            const server = http.createServer((request, response) => this.request(request, response))
+            server.listen(port, hostname, () => resolve(void 0))
+       })
     }
 }
 
