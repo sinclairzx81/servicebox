@@ -21,6 +21,7 @@ export const Sub = Type.Function([Type.Number(), Type.Number()], Type.Number())
 // ------------------------------------------------------
 // Service
 // ------------------------------------------------------
+
 export class Service {
 
     private readonly context = new Context([])
