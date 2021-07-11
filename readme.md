@@ -11,10 +11,10 @@
 ```typescript
 import { Host, Context, Type } from '@sinclair/servicebox'
 
-export const Add = Type.Function([Type.Number(), Type.Number()], Type.Number(), { description: `Adds two numbers` })
+export const Add = Type.Function([Type.Number(), Type.Number()], Type.Number())
 
 export class Service {
-    
+
     private readonly context = new Context([])
 
     public add = this.context.method(Add, (context, a, b) => {
