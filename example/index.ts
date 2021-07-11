@@ -10,17 +10,21 @@ const Space = Type.Box('Space', {
 })
 
 // Define a method signature
-export const Add = Type.Function([Type.Ref(Space, 'Number'), Type.Number()], Type.Number())
+export const Add = Type.Function([
+    Type.Tuple([Type.Ref(Space, 'Number'), Type.String()])
+], Type.Number())
 
 export class MathService {
 
     // Define a method context.
-    private readonly context = new Context([ /** middleware */ ])
+    private readonly context = new Context([ 
+        { map: () => ({a: 1}) }
+    ])
 
     // Define a method
-    public add = this.context.method(Add, (context, a, b) => {
+    public add = this.context.method(Add, (context, a) => {
 
-        return a + b
+        throw 1
 
     }, [Space])
 }
@@ -28,7 +32,7 @@ export class MathService {
 
 const service = new MathService()
 
-
+service.add.execute({a: 1}, [1, '1'])
 
 console.log(service)
 

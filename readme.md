@@ -27,7 +27,7 @@ export const Add = Type.Function([Type.Number(), Type.Number()], Type.Number())
 //
 // -----------------------------------------------------------------
 
-export class MathService {
+export class Service {
 
     private readonly context = new Context([])
 
@@ -40,45 +40,13 @@ export class MathService {
 //
 // -----------------------------------------------------------------
 
-const service = new Service({
+const host = new Host({
 
-    'math': new MathService()
+    'math': new Service()
 })
 
-// -------------------------------------
-// Test
-// -------------------------------------
 
-const result = await service.execute('math/add', {}, 1, 2)
-
-assert(result, 3)
-
-// -------------------------------------
-// Host
-// -------------------------------------
-
-const app = express()
-
-app.post('/api', (req, res) => service.request(req, res))
-
-app.listen(5000)
-
-// -------------------------------------
-// Call
-// -------------------------------------
-
-const results = await post('http://localhost:5000/api', [
-    { jsonrpc: '2.0', method: 'add', params: [10, 20] },
-    { jsonrpc: '2.0', method: 'add', params: [20, 30] },
-    { jsonrpc: '2.0', method: 'add', params: [30, 40] }
-])
-
-// results = [
-//   { jsonrpc: '2.0', id: null, result: 30 },
-//   { jsonrpc: '2.0', id: null, result: 50 },
-//   { jsonrpc: '2.0', id: null, result: 70 },
-// ]
-
+service.listen(5000)
 ```
 ## Overview
 
