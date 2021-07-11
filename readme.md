@@ -40,9 +40,9 @@ host.listen(5000)
 ```
 ## Overview
 
-ServiceBox is a library for building type safe Web Services in NodeJS. It allows one to strictly define a Web Service function and will automatically validate Web Requests to that function using JSON schema. It is designed with TypeScript in mind and provides automatic type inference for all functions and ensures the TypeScript implementation matches the expected data received for the function.
+ServiceBox is a framework for building type safe web services functions in Node. It allows server side developers to define struct web service interfaces and it takes care of validating requests from those interfaces. ServiceBox leverages TypeScript type inference to ensure the server functions are statically correct and it also provides code generation services for clients.
 
-ServiceBox also provides function middleware. Middleware specifically maps HTTP requests to a contextual object to each function. This functionality allows functions to operate under the context of user, essential for multi user role based authorization.
+ServiceBox is built upon the JSON-RPC 2.0 specification.
 
 Built with TypeScript 4.2 and Node 14 LTS.
 
