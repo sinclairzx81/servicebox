@@ -16,10 +16,8 @@ export const Add = Type.Function([Type.Number(), Type.Number()], Type.Number())
 export class Service {
 
     private readonly context = new Context([])
-
-    public add = this.context.method(Add, (context, a, b) => {
-        return a + b
-    })
+    
+    public add = this.context.method(Add, (context, a, b) => a + b)
 }
 
 const host = new Host(new Service())
