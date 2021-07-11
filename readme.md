@@ -9,44 +9,22 @@
 </div>
 
 ```typescript
-import { Service, Context, Type } from '@sinclair/servicebox'
+import { Host, Context, Type } from '@sinclair/servicebox'
 
-// -----------------------------------------------------------------
-//
-// Define the Add Function
-//
-// type Add = (a: number, b: number) => number
-//
-// -----------------------------------------------------------------
-
-export const Add = Type.Function([Type.Number(), Type.Number()], Type.Number())
-
-// -----------------------------------------------------------------
-//
-// Create a Web Service
-//
-// -----------------------------------------------------------------
+export const Add = Type.Function([Type.Number(), Type.Number()], Type.Number(), { description: `Adds two numbers` })
 
 export class Service {
-
+    
     private readonly context = new Context([])
 
-    public ['add'] = this.context.method(Add, (context, a, b) => a + b)
+    public add = this.context.method(Add, (context, a, b) => {
+        return a + b
+    })
 }
 
-// -----------------------------------------------------------------
-//
-// Host the service
-//
-// -----------------------------------------------------------------
+const host = new Host(new Service())
 
-const host = new Host({
-
-    'math': new Service()
-})
-
-
-service.listen(5000)
+host.listen(5000)
 ```
 ## Overview
 

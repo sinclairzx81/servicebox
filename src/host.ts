@@ -26,10 +26,35 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export class Host {
+import * as http     from 'http'
+import * as protocol from './protocol'
+import { Method } from './method'
+
+export interface Methods {
+    [name: string]: Method<any[], any>
+}
+
+export class Host<MS extends Methods> {
+    constructor(private readonly methods: MS) {
+
+    }
+
+    public readBatchProtocolRequest(request: http.IncomingMessage, data: unknown): protocol.BatchProtocolRequest {
+        throw 1
+    }
+
+    public writeProtocolResult(id: number, data: unknown): protocol.ProtocolResult {
+        throw 1
+    }
+
+    public writeProtocolError(id: number, error: Error): protocol.ProtocolError {
+        throw 1
+    }
 
     public listen(port: number) {
+        http.createServer((request, response) => {
 
+        }).listen(5000)
     }
 }
 
