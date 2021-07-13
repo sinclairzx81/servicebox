@@ -15,21 +15,21 @@ export class Authorize {
 
 export class MathService {
     private readonly contexts = new Set<string>()
-    private readonly service  = new Service([])
+    public readonly service = new Service([new Authorize()])
     // -------------------------------------------------
     // Events
     // -------------------------------------------------
 
-    $add    = this.service.event(AddEvent)
-    $remove = this.service.event(AddEvent)
-    $delete = this.service.event(AddEvent)
+    onAdd    = this.service.event(AddEvent)
+    onRemove = this.service.event(AddEvent)
+    onKick   = this.service.event(AddEvent)
 
     // -------------------------------------------------
     // Methods
     // -------------------------------------------------
     add = this.service.method(Add, (context, a, b) => {
         for(const id of this.contexts) {
-            this.$add.send(id, [a, b])
+            this.onAdd.send(id, [a, b])
         }
         return a + b
     })
@@ -37,12 +37,12 @@ export class MathService {
     // -------------------------------------------------
     // Handlers
     // -------------------------------------------------
-    
-    open = this.service.handler(context => {
+
+    $connect = this.service.handler(context => {
         this.contexts.add(context.id)
     })
 
-    close = this.service.handler(context => {
+    $close = this.service.handler(context => {
         this.contexts.delete(context.id)
     })
 }
@@ -52,6 +52,7 @@ export type Services = {[key: string]: any }
 export class Host {
     private readonly methods: Map<string, Method<any[], TFunction<TAny[], TAny>>>
     private readonly events:  Map<string, Event<TSchema>>
+
     constructor(services: Services) {
         this.methods = new Map<string, Method<any[], TFunction<TAny[], TAny>>>()
         this.events  = new Map<string, Event<TSchema>>()
@@ -75,7 +76,10 @@ export class Host {
     }
 
     private loadHandlers(namespace: string, service: any) {
-
+        for(const [name, handler] of Object.entries(service)) {
+            if(!(handler instanceof Method)) continue
+            this.methods.set(`${namespace}/${name}`, handler)
+        }
     }
 
     private loadServices(services: Services) {
@@ -87,8 +91,12 @@ export class Host {
     }
 }
 
+const service = new MathService()
+
+
+
 const host = new Host({
-    "math": new MathService(),
+    "math":  new MathService(),
     "users": new MathService()
 })
 

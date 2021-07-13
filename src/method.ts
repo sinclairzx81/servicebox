@@ -36,8 +36,13 @@ import Ajv, { ValidateFunction }                        from 'ajv'
 // Static Inference
 // ------------------------------------------------------------------------
 
+type DefaultMethodContext<T> = {
+    id: string
+    close:(id: string) => void 
+} & T
+
 export type MethodContext<T extends MiddlewareArray> = UnionToIntersect<{
-    [K in keyof T]: T[K] extends Middleware<infer U> ? U extends null ? { id: string } : { id: string } & U : never 
+    [K in keyof T]: T[K] extends Middleware<infer U> ? U extends null ? DefaultMethodContext<{}> : DefaultMethodContext<U> : never 
 }[number]>
 
 export type MethodReturn<F> = 
