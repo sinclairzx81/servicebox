@@ -9,7 +9,7 @@
 </div>
 
 ```typescript
-import { Host, Context, Type, Stream } from '@sinclair/midnight'
+import { Host, Context, Type, Stream } from '@sinclair/servicebox'
 
 export const Download = Type.Function([Type.String()], Type.Stream())
 
