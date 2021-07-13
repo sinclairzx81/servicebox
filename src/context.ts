@@ -15,7 +15,8 @@ export class Service<M extends MiddlewareArray> {
 
     /** Creates a new handler. */
     public handler(callback: MethodCallback<M, TFunction<[], TAny>>): Method<M, TFunction<[], TAny>> {
-        throw 1
+        // @ts-ignore
+        return new Handler(this.middleware, callback)
     }
 
     /** Creates a new method using this context */

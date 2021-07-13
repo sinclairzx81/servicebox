@@ -16,17 +16,10 @@ export class Authorize {
 export class MathService {
     private readonly contexts = new Set<string>()
     public readonly service = new Service([new Authorize()])
-    // -------------------------------------------------
-    // Events
-    // -------------------------------------------------
-
     onAdd    = this.service.event(AddEvent)
     onRemove = this.service.event(AddEvent)
     onKick   = this.service.event(AddEvent)
 
-    // -------------------------------------------------
-    // Methods
-    // -------------------------------------------------
     add = this.service.method(Add, (context, a, b) => {
         for(const id of this.contexts) {
             this.onAdd.send(id, [a, b])
@@ -34,15 +27,11 @@ export class MathService {
         return a + b
     })
 
-    // -------------------------------------------------
-    // Handlers
-    // -------------------------------------------------
-
-    $connect = this.service.handler(context => {
+    connect = this.service.handler(context => {
         this.contexts.add(context.id)
     })
 
-    $close = this.service.handler(context => {
+    close = this.service.handler(context => {
         this.contexts.delete(context.id)
     })
 }
@@ -62,6 +51,7 @@ export class Host {
     // ---------------------------------------------------------------------
     // Service Registration
     // ---------------------------------------------------------------------
+    
     private loadEvents(namespace: string, service: any) {
         for(const [name, event] of Object.entries(service)) {
             if(!(event instanceof Event)) continue
@@ -93,15 +83,15 @@ export class Host {
 
 const service = new MathService()
 
+console.log(service)
+
+// const host = new Host({
+//     "math":  new MathService(),
+//     "users": new MathService()
+// })
 
 
-const host = new Host({
-    "math":  new MathService(),
-    "users": new MathService()
-})
-
-
-console.log(host)
+// console.log(host)
 
 
 
