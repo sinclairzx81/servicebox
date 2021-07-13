@@ -9,13 +9,13 @@
 </div>
 
 ```typescript
-import { Host, Context, Type } from '@sinclair/servicebox'
+import { Host, Context, Type, Stream } from '@sinclair/servicebox'
 
 // ------------------------------------------------------
 // Functions
 // ------------------------------------------------------
 
-export const Add = Type.Function([Type.Number(), Type.Number()], Type.Number())
+export const Download = Type.Function([Type.String()], Type.Stream())
 
 // ------------------------------------------------------
 // Service
@@ -25,9 +25,10 @@ export class Service {
 
     private readonly context = new Context([new Authorize()])
 
-    public add = this.context.method(Add, (context, a, b) => {
-        
-        return a + b
+    public download = this.context.method(Download, (context, filename) => {
+        const readable = fs.createReadableStream(filename)
+        const headers = {'Content-Type': 'application/octet-stream'}
+        return new Stream(readable, headers)
     })
 }
 
