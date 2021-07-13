@@ -26,14 +26,13 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { UnionToIntersect } from '@sinclair/typebox'
 import { IncomingMessage }  from 'http'
 
 // ------------------------------------------------------------------------
 // Middleware
 // ------------------------------------------------------------------------
 
-export type Middleware<Context extends object | null>  = {
+export type Middleware<Context extends object>  = {
     
     map: (request: IncomingMessage) => Context | Promise<Context> | null | Promise<null>
 }
@@ -42,10 +41,5 @@ export type Middleware<Context extends object | null>  = {
 // MiddlewareArray
 // ------------------------------------------------------------------------
 
-export type MiddlewareArray = Middleware<object | null>[]
+export type MiddlewareArray = Middleware<object>[]
 
-export type MiddlewareArrayContext<T extends MiddlewareArray> = UnionToIntersect<{
-
-    [K in keyof T]: T[K] extends Middleware<infer U> ? U extends null ? {} : U : never 
-
-}[number]>

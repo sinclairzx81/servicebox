@@ -1,55 +1,90 @@
-import * as http from 'http'
-
-import { Host, Type, Service } from '@sinclair/servicebox'
-
+import { Type, Service, Method, Event, IncomingMessage, TSchema, TFunction, TAny } from '@sinclair/servicebox'
 
 export const AddEvent = Type.Tuple([Type.Number(), Type.Number()])
 
 export const Add   = Type.Function([Type.Number(), Type.Number()], Type.Number())
 
-
 export class Authorize {
-   public map(request: any) {
-        return { username: 'dave' }
+   public map(request: IncomingMessage) {
+        return { 
+            username: 'dave',
+            password: 'secret'
+        }
    }
 }
 
 export class MathService {
+    private readonly contexts = new Set<string>()
+    private readonly service  = new Service([])
+    // -------------------------------------------------
+    // Events
+    // -------------------------------------------------
 
-    private readonly service = new Service([new Authorize()])
-    
-    public onAdd = this.service.event(AddEvent)
+    $add    = this.service.event(AddEvent)
+    $remove = this.service.event(AddEvent)
+    $delete = this.service.event(AddEvent)
 
-    public add = this.service.method(Add, async (context, a, b) => {
-
-        this.onAdd.send(context.username, [a, b])
-        
+    // -------------------------------------------------
+    // Methods
+    // -------------------------------------------------
+    add = this.service.method(Add, (context, a, b) => {
+        for(const id of this.contexts) {
+            this.$add.send(id, [a, b])
+        }
         return a + b
     })
 
-    public open = this.service.method(context => {
-
+    open = this.service.method(context => {
+        this.contexts.add(context.id)
     })
 
-    public close = this.service.method(context => {
-        
+    close = this.service.method(context => {
+        this.contexts.delete(context.id)
     })
 }
 
-const service = new MathService()
-console.log(service)
+export type Services = {[key: string]: any }
 
-service.onAdd.receive((id, data) => console.log('leave', id, data))
-service.add.execute({
-    username: 'dave'
-}, 1, 2)
+export class Host {
+    private readonly methods: Map<string, Method<any[], TFunction<TAny[], TAny>>>
+    private readonly events:  Map<string, Event<TSchema>>
+    constructor(services: Services) {
+        this.methods = new Map<string, Method<any[], TFunction<TAny[], TAny>>>()
+        this.events  = new Map<string, Event<TSchema>>()
+        this.loadServices(services)
+    }
 
-const host = new Host(new MathService())
+    // ---------------------------------------------------------------------
+    // Service Registration
+    // ---------------------------------------------------------------------
+    private loadEvents(namespace: string, service: any) {
+        for(const [name, event] of Object.entries(service)) {
+            if(!(event instanceof Event)) continue
+            this.events.set(`${namespace}/${name}`, event)
+        }
+    }
+    private loadMethods(namespace: string, service: any) {
+        for(const [name, method] of Object.entries(service)) {
+            if(!(method instanceof Method)) continue
+            if(name === 'open' || name === 'close') continue
+            this.methods.set(`${namespace}/${name}`, method)
+        }
+    }
+    private loadServices(services: Services) {
+        for(const [namespace, service] of Object.entries(services)) {
+            this.loadMethods(namespace, service)
+            this.loadEvents(namespace, service)
+        }
+    }
+}
 
-host.listen(5000)
+const host = new Host({
+    "math": new MathService(),
+    "users": new MathService()
+})
 
 
-
+console.log(host)
 
 
 

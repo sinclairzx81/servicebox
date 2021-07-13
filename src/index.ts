@@ -26,8 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+export { IncomingMessage } from 'http'
 export * from '@sinclair/typebox'
-export * from './service'
+export * from './context'
 export * from './exception'
 export * from './host'
+export * from './event'
 export * from './method'

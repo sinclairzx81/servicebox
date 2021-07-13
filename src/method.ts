@@ -26,15 +26,19 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TFunction, TSchema, Static }              from '@sinclair/typebox'
-import { MiddlewareArrayContext, MiddlewareArray } from './middleware'
-import addFormats                                  from 'ajv-formats'
-import Ajv, { ValidateFunction }                   from 'ajv'
-import * as exception                              from './exception'
+import { TFunction, TSchema, Static, UnionToIntersect } from '@sinclair/typebox'
+import { MiddlewareArray, Middleware }                  from './middleware'
+import * as exception                                   from './exception'
+import addFormats                                       from 'ajv-formats'
+import Ajv, { ValidateFunction }                        from 'ajv'
 
 // ------------------------------------------------------------------------
 // Static Inference
 // ------------------------------------------------------------------------
+
+export type MethodContext<T extends MiddlewareArray> = UnionToIntersect<{
+    [K in keyof T]: T[K] extends Middleware<infer U> ? U extends null ? { id: string } : { id: string } & U : never 
+}[number]>
 
 export type MethodReturn<F> = 
     F extends TFunction<any, infer R> ?
@@ -42,13 +46,12 @@ export type MethodReturn<F> =
         : never
     : never
 
-
 export type MethodArguments<M, F> =
     M extends MiddlewareArray ?
         F extends TFunction<infer P, infer R> ?
             P extends TSchema[] ?
                 R extends TSchema   ?
-                    [MiddlewareArrayContext<M>, ...{ [K in keyof P]: Static<P[K]> }]
+                    [MethodContext<M>, ...{ [K in keyof P]: Static<P[K]> }]
                 : never 
             : never 
         : never
@@ -116,5 +119,11 @@ export class Method<M extends MiddlewareArray, F extends TFunction<TSchema[], TS
         const result = await this.callback.apply(null, params)
         this.assertReturns(result)
         return result as MethodReturn<F>
+    }
+}
+
+
+export class Handler<M extends MiddlewareArray> {
+    constructor() {
     }
 }
