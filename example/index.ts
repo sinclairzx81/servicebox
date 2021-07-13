@@ -14,26 +14,35 @@ export class Authorize {
 }
 
 export class MathService {
-    private readonly contexts = new Set<string>()
     public readonly service = new Service([new Authorize()])
-    onAdd    = this.service.event(AddEvent)
-    onRemove = this.service.event(AddEvent)
-    onKick   = this.service.event(AddEvent)
+    public readonly handlers = {
+        connect: this.service.handler(context => this.contexts.add(context.id)),
+        close:   this.service.handler(context => this.contexts.delete(context.id))
+    }
+    public readonly events = {
+        add:    this.service.event(AddEvent),
+        remove: this.service.event(AddEvent),
+        update: this.service.event(AddEvent)
+    }
 
-    add = this.service.method(Add, (context, a, b) => {
-        for(const id of this.contexts) {
-            this.onAdd.send(id, [a, b])
-        }
-        return a + b
-    })
+    constructor(
+        private readonly options?: any,
+        private readonly options2?: any,
+        private readonly options3?: any
+    ) {
+        
+    }
 
-    connect = this.service.handler(context => {
-        this.contexts.add(context.id)
-    })
-
-    close = this.service.handler(context => {
-        this.contexts.delete(context.id)
-    })
+    private contexts = new Set<string>()
+    
+    public readonly methods = {
+        add: this.service.method(Add, (context, a, b) => {
+            for(const id of this.contexts) {
+                this.events.add.send(id, [a, b])
+            }
+            return a + b
+        })
+    }
 }
 
 export type Services = {[key: string]: any }
@@ -51,7 +60,7 @@ export class Host {
     // ---------------------------------------------------------------------
     // Service Registration
     // ---------------------------------------------------------------------
-    
+
     private loadEvents(namespace: string, service: any) {
         for(const [name, event] of Object.entries(service)) {
             if(!(event instanceof Event)) continue

@@ -16,13 +16,13 @@ import { Host, Context, Type, Stream } from '@sinclair/servicebox'
 // Server
 // --------------------------------------------------------------
 
-export const Add = Type.Function([Type.Number(), Type.Number())], Type.Number())
+export const Echo = Type.Function([Type.String()], Type.String())
 
 export class Service {
 
     private readonly context = new Context([])
 
-    public add = this.context.method(Add, (context, a, b) => a + b)
+    public echo = this.context.method(Echo, (context, arg) => arg)
 }
 
 const host = new Host({
@@ -38,7 +38,7 @@ host.listen(5000)
 
 const client = new Client('http://localhost:5000')
 
-const result = await client.service.add(1, 2)
+const result = await client.service.echo('hello world')
 
 ```
 ## Overview
