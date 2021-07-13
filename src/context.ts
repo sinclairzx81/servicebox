@@ -1,8 +1,8 @@
 
-import { Type, TFunction, TSchema, TAny } from '@sinclair/typebox'
-import { MiddlewareArray }                from './middleware'
-import { Method, MethodCallback }         from './method'
-import { Event }                          from './event'
+import { Type, TFunction, TSchema, TAny }  from '@sinclair/typebox'
+import { MiddlewareArray }                 from './middleware'
+import { Handler, Method, MethodCallback } from './method'
+import { Event }                           from './event'
 
 // ------------------------------------------------------------------------
 // Service
@@ -12,7 +12,12 @@ export class Service<M extends MiddlewareArray> {
     constructor(
         public readonly middleware: M
     ) { }
-    
+
+    /** Creates a new handler. */
+    public handler(callback: MethodCallback<M, TFunction<[], TAny>>): Method<M, TFunction<[], TAny>> {
+        throw 1
+    }
+
     /** Creates a new method using this context */
     public method(callback: MethodCallback<M, TFunction<[], TAny>>): Method<M, TFunction<[], TAny>>
 

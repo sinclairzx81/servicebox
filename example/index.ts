@@ -34,11 +34,15 @@ export class MathService {
         return a + b
     })
 
-    open = this.service.method(context => {
+    // -------------------------------------------------
+    // Handlers
+    // -------------------------------------------------
+    
+    open = this.service.handler(context => {
         this.contexts.add(context.id)
     })
 
-    close = this.service.method(context => {
+    close = this.service.handler(context => {
         this.contexts.delete(context.id)
     })
 }
@@ -66,12 +70,17 @@ export class Host {
     private loadMethods(namespace: string, service: any) {
         for(const [name, method] of Object.entries(service)) {
             if(!(method instanceof Method)) continue
-            if(name === 'open' || name === 'close') continue
             this.methods.set(`${namespace}/${name}`, method)
         }
     }
+
+    private loadHandlers(namespace: string, service: any) {
+
+    }
+
     private loadServices(services: Services) {
         for(const [namespace, service] of Object.entries(services)) {
+            this.loadHandlers(namespace, service)
             this.loadMethods(namespace, service)
             this.loadEvents(namespace, service)
         }

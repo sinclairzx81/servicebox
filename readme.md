@@ -28,22 +28,20 @@ export class Controller {
     private readonly contexts = new Set<string>()
     private readonly service  = new Service([new Authorize()])
 
-    public on_add    = this.service.event(AddEvent)
-    public on_remove = this.service.event(AddEvent)
-    public on_delete = this.service.event(AddEvent)
-
+    public $add = this.service.event(AddEvent)
+    
     public add = this.service.method(AddMethod, (context, a, b) => {
         for(const id of this.contexts) {
-            this.on_add.send(id, [a, b])
+            this.$add.send(id, [a, b])
         }
         return a + b
     })
 
-    public open = this.service.method(context => {
+    public open = this.service.handler(context => {
         this.contexts.add(context.id)
     })
 
-    public close = this.service.method(context => {
+    public close = this.service.handler(context => {
         this.contexts.delete(context.id)
     })
 }
