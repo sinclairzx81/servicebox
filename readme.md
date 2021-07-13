@@ -15,19 +15,25 @@ import { Host, Context, Type } from '@sinclair/servicebox'
 // Functions
 // ------------------------------------------------------
 
-export const Add = Type.Function([Type.Number(), Type.Number()], Type.Number())
-export const Sub = Type.Function([Type.Number(), Type.Number()], Type.Number())
+export const AddEvent = Type.Object({ result: Type.Number() })
+
+export const AddMethod = Type.Function([Type.Number(), Type.Number()], Type.Number())
 
 // ------------------------------------------------------
 // Service
 // ------------------------------------------------------
 
 export class Service {
-
     private readonly context = new Context([])
 
-    public add = this.context.method(Add, (context, a, b) => a + b)
-    public sub = this.context.method(Sub, (context, a, b) => a - b)
+    public on_add = this.context.event(AddEvent)
+
+    public add = this.context.method(AddMethod, (context, a, b) => {
+
+        this.on_add.send(context.id, [a, b])
+
+        return a + b
+    })
 }
 
 // ------------------------------------------------------

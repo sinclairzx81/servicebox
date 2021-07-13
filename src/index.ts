@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export * from '@sinclair/typebox'
-export * from './context'
+export * from './service'
 export * from './exception'
 export * from './host'
 export * from './method'

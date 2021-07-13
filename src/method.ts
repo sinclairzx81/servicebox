@@ -75,7 +75,7 @@ export class Method<M extends MiddlewareArray, F extends TFunction<TSchema[], TS
     private readonly returnsValidator: ValidateFunction<unknown>
     constructor(
         public readonly middleware: M,
-        public readonly signature:  F,
+        public readonly schema:     F,
         public readonly callback:   MethodCallback<M, F>
     ) {
         const ajv = addFormats(new Ajv({ allErrors: true }), [
@@ -84,8 +84,8 @@ export class Method<M extends MiddlewareArray, F extends TFunction<TSchema[], TS
             'uri-template', 'json-pointer',  'relative-json-pointer', 
             'regex'
         ]).addKeyword('kind').addKeyword('modifier')
-        this.paramsValidators = signature.arguments.map(schema => ajv.compile(schema))
-        this.returnsValidator = ajv.compile(signature.returns)
+        this.paramsValidators = schema.arguments.map(schema => ajv.compile(schema))
+        this.returnsValidator = ajv.compile(schema.returns)
     }
 
     private assertParams(values: unknown[]) {
