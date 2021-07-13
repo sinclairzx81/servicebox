@@ -9,26 +9,17 @@
 </div>
 
 ```typescript
-import { Host, Context, Type, Stream } from '@sinclair/servicebox'
-
-// ------------------------------------------------------
-// Functions
-// ------------------------------------------------------
+import { Host, Context, Type, Stream } from '@sinclair/midnight'
 
 export const Download = Type.Function([Type.String()], Type.Stream())
 
-// ------------------------------------------------------
-// Service
-// ------------------------------------------------------
-
 export class Authorize {
-    map(request: IncomingMessage) {
+    public map(request: IncomingMessage) {
         return { username: 'dave' }
     }
 }
 
 export class Service {
-
     private readonly context = new Context([new Authorize()])
 
     public download = this.context.method(Download, (context, filename) => {
@@ -40,15 +31,11 @@ export class Service {
     public connect = this.context.handler(context => {
         console.log(context.username, 'connected')
     })
-    
+
     public close = this.context.handler(context => {
         console.log(context.username, 'disconnected')
     })
 }
-
-// ------------------------------------------------------
-// Host
-// ------------------------------------------------------
 
 const host = new Host({
     service: new Service()
