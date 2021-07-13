@@ -21,6 +21,12 @@ export const Download = Type.Function([Type.String()], Type.Stream())
 // Service
 // ------------------------------------------------------
 
+export class Authorize {
+    map(request: IncomingMessage) {
+        return { username: 'dave' }
+    }
+}
+
 export class Service {
 
     private readonly context = new Context([new Authorize()])
@@ -29,6 +35,14 @@ export class Service {
         const readable = fs.createReadableStream(filename)
         const headers = {'Content-Type': 'application/octet-stream'}
         return new Stream(readable, headers)
+    })
+
+    public connect = this.context.handler(context => {
+        console.log(context.username, 'connected')
+    })
+    
+    public close = this.context.handler(context => {
+        console.log(context.username, 'disconnected')
     })
 }
 
