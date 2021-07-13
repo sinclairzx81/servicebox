@@ -11,41 +11,41 @@
 ```typescript
 import { Host, Context, Type, Stream } from '@sinclair/servicebox'
 
-export const Download = Type.Function([Type.String()], Type.Stream())
 
-export class Authorize {
-    public map(request: IncomingMessage) {
-        return { username: 'dave' }
-    }
-}
+// --------------------------------------------------------------
+// Server
+// --------------------------------------------------------------
+
+export const Add = Type.Function([Type.Number(), Type.Number())], Type.Number())
 
 export class Service {
-    private readonly context = new Context([new Authorize()])
 
-    public download = this.context.method(Download, (context, filename) => {
-        const readable = fs.createReadableStream(filename)
-        const headers = {'Content-Type': 'application/octet-stream'}
-        return new Stream(readable, headers)
-    })
+    private readonly context = new Context([])
 
-    public connect = this.context.handler(context => {
-        console.log(context.username, 'connected')
-    })
-
-    public close = this.context.handler(context => {
-        console.log(context.username, 'disconnected')
-    })
+    public add = this.context.method(Add, (context, a, b) => a + b)
 }
 
 const host = new Host({
+
     service: new Service()
 })
 
 host.listen(5000)
+
+// --------------------------------------------------------------
+// Client
+// --------------------------------------------------------------
+
+const client = new Client('http://localhost:5000')
+
+const result = await client.service.add(1, 2)
+
 ```
 ## Overview
 
-ServiceBox is a framework for building type safe web services functions in Node. It allows server side developers to define struct web service interfaces and it takes care of validating requests from those interfaces. ServiceBox leverages TypeScript type inference to ensure the server functions are statically correct and it also provides code generation services for clients.
+ServiceBox is a framework for building secure, type safe and self documenting Web Services in Node. It is designed from the ground up to operate in microservice environments, allowing each service to expose a callable interface for browsers and other services to call over the network. Additionally, it provides a unified API that can operate both over HTTP and Web Sockets, with services run over Web Socket also supporting real time event dispatch.
+
+All functions in ServiceBox are defined with JSON schema which ServiceBox uses to generate TypeScript client libraries as well as providing machine readable documentation for other callers wanting to use the service.
 
 ServiceBox is built upon the JSON-RPC 2.0 specification and developed with TypeScript 4.2 and Node 14 LTS.
 
