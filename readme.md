@@ -23,25 +23,24 @@ export const AddMethod = Type.Function([Type.Number(), Type.Number()], Type.Numb
 // Service
 // ------------------------------------------------------
 
-export class Controller {
-
+export class Service {
     private readonly contexts = new Set<string>()
-    private readonly service  = new Service([new Authorize()])
+    private readonly context = new Context([new Authorize()])
 
-    public $add = this.service.event(AddEvent)
-    
-    public add = this.service.method(AddMethod, (context, a, b) => {
+    public $add = this.context.event(AddEvent)
+
+    public add = this.context.method(AddMethod, (context, a, b) => {
         for(const id of this.contexts) {
             this.$add.send(id, [a, b])
         }
         return a + b
     })
 
-    public open = this.service.handler(context => {
+    public open = this.context.handler(context => {
         this.contexts.add(context.id)
     })
 
-    public close = this.service.handler(context => {
+    public close = this.context.handler(context => {
         this.contexts.delete(context.id)
     })
 }
@@ -50,7 +49,9 @@ export class Controller {
 // Host
 // ------------------------------------------------------
 
-const host = new Host(new Controller())
+const host = new Host({
+    service: new Service()
+})
 
 host.listen(5000)
 ```
