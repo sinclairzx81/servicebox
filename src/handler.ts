@@ -26,14 +26,27 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export { IncomingMessage } from 'http'
-export * from '@sinclair/typebox'
-export * from './context'
-export * from './event'
-export * from './exception'
-export * from './handler'
-export * from './host'
-export * from './method'
-export * from './middleware'
-export * from './protocol'
-export * from './service'
+import { Static, TFunction, TSchema, UnionToIntersect } from '@sinclair/typebox'
+import { MiddlewareArray, Middleware }          from './middleware'
+import { Context }                              from './context'
+
+// ------------------------------------------------------------------------
+// Handler
+// ------------------------------------------------------------------------
+
+export type HandlerContext<T extends MiddlewareArray> = Context<UnionToIntersect<{
+    [K in keyof T]: T[K] extends Middleware<infer U> ? U extends null ? {} : U : never 
+}[number]>>
+export type HandlerReturn = Promise<any> | any
+export type HandlerArguments<M extends MiddlewareArray> = [HandlerContext<M>]
+export type HandlerCallback<M extends MiddlewareArray> = (...args: HandlerArguments<M>) => Promise<HandlerReturn> | HandlerReturn
+
+export class Handler<M extends MiddlewareArray> {
+    constructor(
+        public readonly middleware: M,
+        public readonly callback: HandlerCallback<M>
+    ) {}
+
+    public execute() {
+    }
+}

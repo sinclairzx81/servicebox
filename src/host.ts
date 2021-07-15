@@ -26,29 +26,69 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import Ajv, { ValidateFunction } from 'ajv'
-import { Method }                from './method'
-import * as http                 from 'http'
-import * as exception            from './exception'
-import * as protocol             from './protocol'
+import Ajv, { ValidateFunction }    from 'ajv'
+import { TSchema, TFunction, TAny } from '@sinclair/typebox'
+import { Handler }                  from './handler'
+import { Method }                   from './method'
+import { Event }                    from './event'
+import * as http                    from 'http'
+import * as exception               from './exception'
+import * as protocol                from './protocol'
 
 export interface Methods {
     [name: string]: any
 }
 
+export type Services = { [name: string]: any }
+
 export class Host {
+    private readonly methods: Map<string, Method<any[], TFunction<TAny[], TAny>>>
+    private readonly events:  Map<string, Event<TSchema>>
+    private readonly handlers: Map<string, Handler<any[]>>
+    
     private readonly protocolRequestValidator: ValidateFunction<unknown>
     private readonly protocolResponseValidator: ValidateFunction<unknown>
-    private readonly methods: Map<string, Method<any[], any>>
     
-    constructor(methods: Methods) {
+    constructor(services: Services) {
+        this.handlers = new Map<string, Handler<any[]>>()
+        this.methods = new Map<string, Method<any[], TFunction<TAny[], TAny>>>()
+        this.events = new Map<string, Event<TSchema>>()
+        this.loadServices(services)
+
         const ajv = new Ajv().addKeyword('kind').addKeyword('modifier')
         this.protocolRequestValidator  = ajv.compile(protocol.BatchProtocolRequest)
         this.protocolResponseValidator = ajv.compile(protocol.BatchProtocolResponse)
-        this.methods = new Map<string, Method<any[], any>>()
-        for(const [name, method] of Object.entries(methods)) {
+    }
+
+    // ---------------------------------------------------------------------
+    // Service Registration
+    // ---------------------------------------------------------------------
+
+    private loadEvents(namespace: string, service: any) {
+        for(const [name, event] of Object.entries(service)) {
+            if(!(event instanceof Event)) continue
+            this.events.set(`${namespace}/${name}`, event)
+        }
+    }
+    private loadMethods(namespace: string, service: any) {
+        for(const [name, method] of Object.entries(service)) {
             if(!(method instanceof Method)) continue
-            this.methods.set(name, method)
+            this.methods.set(`${namespace}/${name}`, method)
+        }
+    }
+
+    private loadHandlers(namespace: string, service: any) {
+        for(const [name, handler] of Object.entries(service)) {
+            if(!(handler instanceof Handler)) continue
+            this.handlers.set(`${namespace}/${name}`, handler)
+        }
+    }
+
+    private loadServices(services: Services) {
+        for(const [namespace, service] of Object.entries(services)) {
+            this.loadHandlers(namespace, service)
+            this.loadMethods(namespace, service)
+            this.loadEvents(namespace, service)
         }
     }
 
@@ -96,6 +136,11 @@ export class Host {
 
     public request(request: http.IncomingMessage, response: http.ServerResponse) {
         // todo: implement request logic here
+    }
+
+    /** Closes the connection with the given id */
+    public close(id: string) {
+
     }
 
     public listen(port: number, hostname: string = '0.0.0.0') {

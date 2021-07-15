@@ -31,19 +31,15 @@ import { MiddlewareArray, Middleware }                  from './middleware'
 import * as exception                                   from './exception'
 import addFormats                                       from 'ajv-formats'
 import Ajv, { ValidateFunction }                        from 'ajv'
+import { Context } from './context'
 
 // ------------------------------------------------------------------------
 // Static Inference
 // ------------------------------------------------------------------------
 
-type DefaultMethodContext<T> = {
-    id: string
-    close:(id: string) => void 
-} & T
-
-export type MethodContext<T extends MiddlewareArray> = UnionToIntersect<{
-    [K in keyof T]: T[K] extends Middleware<infer U> ? U extends null ? DefaultMethodContext<{}> : DefaultMethodContext<U> : never 
-}[number]>
+export type MethodContext<T extends MiddlewareArray> = Context<UnionToIntersect<{
+    [K in keyof T]: T[K] extends Middleware<infer U> ? U extends null ? {} : U : never 
+}[number]>>
 
 export type MethodReturn<F> = 
     F extends TFunction<any, infer R> ?
@@ -51,26 +47,23 @@ export type MethodReturn<F> =
         : never
     : never
 
-export type MethodArguments<M, F> =
-    M extends MiddlewareArray ?
-        F extends TFunction<infer P, infer R> ?
-            P extends TSchema[] ?
-                R extends TSchema   ?
-                    [MethodContext<M>, ...{ [K in keyof P]: Static<P[K]> }]
-                : never 
+export type MethodArguments<M extends MiddlewareArray, F> =
+    F extends TFunction<infer P, infer R> ?
+        P extends TSchema[] ?
+            R extends TSchema   ?
+                [MethodContext<M>, ...{ [K in keyof P]: Static<P[K]> }]
             : never 
-        : never
+        : never 
     : never
 
-export type MethodCallback<M, F> =
-    M extends MiddlewareArray ?
-        F extends TFunction<infer P, infer R> ?
-            P extends TSchema[] ?
-                R extends TSchema ?
-                    (...args: MethodArguments<M, F>) => Promise<MethodReturn<F>> | MethodReturn<F>
-                : never 
+
+export type MethodCallback<M extends MiddlewareArray, F> =
+    F extends TFunction<infer P, infer R> ?
+        P extends TSchema[] ?
+            R extends TSchema ?
+                (...args: MethodArguments<M, F>) => Promise<MethodReturn<F>> | MethodReturn<F>
             : never 
-        : never
+        : never 
     : never
 
 
@@ -127,8 +120,3 @@ export class Method<M extends MiddlewareArray, F extends TFunction<TSchema[], TS
     }
 }
 
-
-export class Handler<M extends MiddlewareArray> {
-    constructor() {
-    }
-}
