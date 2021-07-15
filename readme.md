@@ -24,6 +24,10 @@ export class EchoService {
     public echo = this.service.method(Echo, (context, arg) => arg)
 }
 
+// --------------------------------------------------------------
+// Host
+// --------------------------------------------------------------
+
 const host = new Host({
 
     service: new EchoService()
