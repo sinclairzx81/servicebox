@@ -26,6 +26,12 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './client/index'
-export * from './host/index'
-export * from './service/index'
+import { Host } from '../host/host'
+
+export class Context<Identity> {
+    constructor (
+        public readonly id:       string,
+        public readonly host:     Host,
+        public readonly identity: Identity
+    ) { }
+}

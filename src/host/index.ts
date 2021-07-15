@@ -26,6 +26,4 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './client/index'
-export * from './host/index'
-export * from './service/index'
+export * from './host'

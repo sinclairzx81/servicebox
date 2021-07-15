@@ -1,6 +1,4 @@
-import { Host, Type, Service } from '@sinclair/servicebox'
-
-import { Client } from './client'
+import { Host, Type, Service, Client} from '@sinclair/servicebox'
 
 export const AddEvent = Type.Tuple([Type.Number(), Type.Number()])
 
@@ -17,7 +15,7 @@ export class MathService {
     public readonly $add    = this.service.event(AddEvent)
     public readonly $remove = this.service.event(AddEvent)
     public readonly $update = this.service.event(AddEvent)
-    
+
     public connect = this.service.handler(context => {
         console.log('context:connect', context.identity)
     })

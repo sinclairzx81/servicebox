@@ -28,16 +28,16 @@ THE SOFTWARE.
 
 import Ajv, { ValidateFunction }    from 'ajv'
 import { TSchema, TFunction, TAny } from '@sinclair/typebox'
-import { Context }                  from './context'
-import { Handler }                  from './handler'
-import { Method }                   from './method'
-import { Event }                    from './event'
+import { Context }                  from '../service/context'
+import { Handler }                  from '../service/handler'
+import { Method }                   from '../service/method'
+import { Event }                    from '../service/event'
 
 import * as uuid                    from 'uuid'
 import * as http                    from 'http'
-import * as exception               from './exception'
-import * as protocol                from './protocol'
-import { MiddlewareArray } from './middleware'
+import * as exception               from '../service/exception'
+import * as protocol                from '../service/protocol'
+import { MiddlewareArray } from '../service/middleware'
 
 export interface Methods {
     [name: string]: any
