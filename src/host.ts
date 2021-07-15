@@ -164,13 +164,22 @@ export class Host {
         }, {})
     }
 
-    private async executeRequest(request: http.IncomingMessage, contextid: string, rpc_request: protocol.ProtocolRequest): Promise<protocol.ProtocolResponse>{
+    private async executeRequest(request: http.IncomingMessage, context_id: string, rpc_request: protocol.ProtocolRequest): Promise<protocol.ProtocolResponse>{
         try {
             if(!this.methods.has(rpc_request.method)) throw new exception.MethodNotFoundException({ })
-            const method   = this.methods.get(rpc_request.method)!
-            const identity = await this.executeMiddleware(request, method.middleware)
-            const context  = new Context(contextid, this, identity)
+            const method       = this.methods.get(rpc_request.method)!
+            const context_data = await this.executeMiddleware(request, method.middleware)
+            const context  = new Context(context_id, this, context_data)
+            const [service_name, method_name] = rpc_request.method.split('/')
+            if(this.handlers.has(`${service_name}/connect`)) {
+                const handler = this.handlers.get(`${service_name}/connect`)!
+                handler.execute(context)
+            }
             const result   = await method.execute(context, ...rpc_request.params)
+            if(this.handlers.has(`${service_name}/close`)) {
+                const handler = this.handlers.get(`${service_name}/close`)!
+                handler.execute(context)
+            }
             return { jsonrpc: '2.0', id: rpc_request.id, result }
         } catch(error) {
             if(!(error instanceof exception.Exception)) {

@@ -7,7 +7,7 @@ export const AddEvent = Type.Tuple([Type.Number(), Type.Number()])
 export const Add   = Type.Function([Type.Number(), Type.Number()], Type.Number())
 
 export class Authorize {
-    map(request) {
+    map(request: any) {
         return { a: 'dave' }
     }
 }
@@ -15,14 +15,14 @@ export class Authorize {
 export class MathService {
     public readonly service = new Service([new Authorize()])
 
-    $add    = this.service.event(AddEvent)
-    $remove = this.service.event(AddEvent)
-    $update = this.service.event(AddEvent)
+    public $add    = this.service.event(AddEvent)
+    public $remove = this.service.event(AddEvent)
+    public $update = this.service.event(AddEvent)
 
     public connect = this.service.handler(context => {
-        console.log('context:connect')
+        console.log('context:connect', context.identity)
     })
-
+    
     public add = this.service.method(Add, (context, a, b) => {
         console.log(context.identity)
         return a + b
@@ -34,8 +34,7 @@ export class MathService {
     })
 
     public close = this.service.handler(context => {
-        
-        console.log('context:close')
+        console.log('context:close', context.identity)
     })
 }
 

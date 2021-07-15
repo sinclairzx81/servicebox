@@ -38,8 +38,7 @@ export type HandlerContext<T extends MiddlewareArray> = Context<UnionToIntersect
     [K in keyof T]: T[K] extends Middleware<infer U> ? U extends null ? {} : U : never 
 }[number]>>
 export type HandlerReturn = Promise<any> | any
-export type HandlerArguments<M extends MiddlewareArray> = [HandlerContext<M>]
-export type HandlerCallback<M extends MiddlewareArray> = (...args: HandlerArguments<M>) => Promise<HandlerReturn> | HandlerReturn
+export type HandlerCallback<M extends MiddlewareArray> = (context: HandlerContext<M>) => Promise<HandlerReturn> | HandlerReturn
 
 /** A handler for receiving socket events */
 export class Handler<M extends MiddlewareArray> {
@@ -48,6 +47,7 @@ export class Handler<M extends MiddlewareArray> {
         public readonly callback: HandlerCallback<M>
     ) {}
 
-    public execute() {
+    public execute(context:  HandlerContext<M>) {
+        return this.callback(context)
     }
 }
