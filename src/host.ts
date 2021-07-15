@@ -37,6 +37,7 @@ import * as uuid                    from 'uuid'
 import * as http                    from 'http'
 import * as exception               from './exception'
 import * as protocol                from './protocol'
+import { MiddlewareArray } from './middleware'
 
 export interface Methods {
     [name: string]: any
@@ -126,8 +127,8 @@ export class Host {
                 throw new exception.ParseException({ message })
             }
             const buffer = await this.readBuffer(request)
-            const text = buffer.toString('utf8')
-            const data = JSON.parse(text)
+            const text   = buffer.toString('utf8')
+            const data   = JSON.parse(text)
             if(!this.protocolRequestValidator(data)) {
                 throw new exception.InvalidRequestException({ })
             }
@@ -141,46 +142,60 @@ export class Host {
         }
     }
 
-    // ---------------------------------------------------------------------
-    // Method Invocation
-    // ---------------------------------------------------------------------
-    
     private async writeBatchProtocolResponse(response: http.ServerResponse, batch_response: protocol.BatchProtocolResponse) {
         response.statusCode = 200
         response.setHeader('Content-Type', 'application/json')
         await this.writeBuffer(response, Buffer.from(JSON.stringify(batch_response)))
     }
 
-    private async executeRequest(contextid: string, request: protocol.ProtocolRequest): Promise<protocol.ProtocolResponse>{
+    // ---------------------------------------------------------------------
+    // Method Invocation
+    // ---------------------------------------------------------------------
+
+    private async executeMiddleware(request: http.IncomingMessage, middlewareArray: MiddlewareArray) {
+        const contexts = []
+        for(const middleware of middlewareArray) {
+            const context = await middleware.map(request)
+            if(context === null) continue
+            contexts.push(context)
+        }
+        return contexts.reduce((acc, context) => {
+            return { ...acc, ...context}
+        }, {})
+    }
+
+    private async executeRequest(request: http.IncomingMessage, contextid: string, rpc_request: protocol.ProtocolRequest): Promise<protocol.ProtocolResponse>{
         try {
-            if(!this.methods.has(request.method)) throw new exception.MethodNotFoundException({ })
-            const method = this.methods.get(request.method)!
-            const context = new Context(contextid, this, {})
-            const result = await method.execute(context, ...request.params)
-            return { jsonrpc: '2.0', id: request.id, result }
+            if(!this.methods.has(rpc_request.method)) throw new exception.MethodNotFoundException({ })
+            const method   = this.methods.get(rpc_request.method)!
+            const identity = await this.executeMiddleware(request, method.middleware)
+            const context  = new Context(contextid, this, identity)
+            const result   = await method.execute(context, ...rpc_request.params)
+            return { jsonrpc: '2.0', id: rpc_request.id, result }
         } catch(error) {
             if(!(error instanceof exception.Exception)) {
-                return { jsonrpc: '2.0', id: request.id, error: new exception.InternalErrorException({ }) }
+                return { jsonrpc: '2.0', id: rpc_request.id, error: new exception.InternalErrorException({ }) }
             } else {
-                return { jsonrpc: '2.0', id: request.id, error }
+                return { jsonrpc: '2.0', id: rpc_request.id, error }
             }
         }
     }
 
     public async request(request: http.IncomingMessage, response: http.ServerResponse) {
-        const contextid = uuid.v4()
-        const batch_request = await this.readBatchProtocolRequest(request)
-        const batch_response: protocol.ProtocolResponse[] = []
-        for(const request of batch_request) {
-            const response = await this.executeRequest(contextid, request)
-            batch_response.push(response)
+        
+        const rpc_batch_request = await this.readBatchProtocolRequest(request)
+        const rpc_batch_response: protocol.ProtocolResponse[] = []
+        for(const rpc_request of rpc_batch_request) {
+            const context_id = uuid.v4()
+            const response = await this.executeRequest(request, context_id, rpc_request)
+            rpc_batch_response.push(response)
         }
-        await this.writeBatchProtocolResponse(response, batch_response)
+        await this.writeBatchProtocolResponse(response, rpc_batch_response)
     }
 
     /** Closes the connection with the given id */
     public close(id: string) {
-
+        console.log('calling close')
     }
 
     public listen(port: number, hostname: string = '0.0.0.0') {
