@@ -141,30 +141,41 @@ export class Host {
         }
     }
 
-    private async writeBatchProtocolResponse(response: http.ServerResponse) {
-        // todo: implement server response
+    // ---------------------------------------------------------------------
+    // Method Invocation
+    // ---------------------------------------------------------------------
+    
+    private async writeBatchProtocolResponse(response: http.ServerResponse, batch_response: protocol.BatchProtocolResponse) {
+        response.statusCode = 200
+        response.setHeader('Content-Type', 'application/json')
+        await this.writeBuffer(response, Buffer.from(JSON.stringify(batch_response)))
+    }
+
+    private async executeRequest(contextid: string, request: protocol.ProtocolRequest): Promise<protocol.ProtocolResponse>{
+        try {
+            if(!this.methods.has(request.method)) throw new exception.MethodNotFoundException({ })
+            const method = this.methods.get(request.method)!
+            const context = new Context(contextid, this, {})
+            const result = await method.execute(context, ...request.params)
+            return { jsonrpc: '2.0', id: request.id, result }
+        } catch(error) {
+            if(!(error instanceof exception.Exception)) {
+                return { jsonrpc: '2.0', id: request.id, error: new exception.InternalErrorException({ }) }
+            } else {
+                return { jsonrpc: '2.0', id: request.id, error }
+            }
+        }
     }
 
     public async request(request: http.IncomingMessage, response: http.ServerResponse) {
-        const requestid = uuid.v4()
-        try {
-            const batch_request = await this.readBatchProtocolRequest(request)
-            for(const request of batch_request) {
-                if(!this.methods.has(request.method)) throw new exception.MethodNotFoundException({ })
-                
-                const method = this.methods.get(request.method)!
-                const context = new Context(requestid, this, {})
-                method.execute(context, ...request.params)
-                
-            }
-        } catch(error) {
-            if(!(error instanceof exception.Exception)) {
-
-            } else {
-                
-            }
+        const contextid = uuid.v4()
+        const batch_request = await this.readBatchProtocolRequest(request)
+        const batch_response: protocol.ProtocolResponse[] = []
+        for(const request of batch_request) {
+            const response = await this.executeRequest(contextid, request)
+            batch_response.push(response)
         }
-        
+        await this.writeBatchProtocolResponse(response, batch_response)
     }
 
     /** Closes the connection with the given id */

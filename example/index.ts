@@ -8,22 +8,19 @@ export const Add   = Type.Function([Type.Number(), Type.Number()], Type.Number()
 
 export class MathService {
     public readonly  service  = new Service([])
-    private readonly contexts = new Set<string>()
 
     $add    = this.service.event(AddEvent)
     $remove = this.service.event(AddEvent)
     $update = this.service.event(AddEvent)
 
     public connect = this.service.handler(context => {
-        this.contexts.add(context.id)
+        console.log('context:connect')
     })
     public close = this.service.handler(context => {
-        this.contexts.delete(context.id)
+        console.log('context:close')
     })
     public add = this.service.method(Add, (context, a, b) => {
-        for(const id of this.contexts) {
-            this.$add.send(id, [a, b])
-        }
+        console.log('add', a, b)
         return a + b
     })
 }
@@ -37,9 +34,14 @@ const host = new Host({
 
 host.listen(5000)
 
-const client = new Client('http://localhost:5000')
+async function start() {
 
-client.execute('math/add', 1, 2)
+    const client = new Client('http://localhost:5000')
 
+    const result = await client.execute('math/add', 1, 2)
 
+    console.log('result', result)
+}
+
+start()
 

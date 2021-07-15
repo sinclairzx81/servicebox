@@ -36,7 +36,7 @@ import { Exception } from './exception'
 export type ProtocolRequest = Static<typeof ProtocolRequest>
 export const ProtocolRequest = Type.Object({
     jsonrpc: Type.Literal("2.0"),
-    id:      Type.Optional(Type.Number()),
+    id:      Type.Union([Type.Null(), Type.Number()]),
     method:  Type.String(),
     params:  Type.Array(Type.Unknown())
 })

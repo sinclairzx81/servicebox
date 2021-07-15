@@ -38,7 +38,7 @@ host.listen(5000)
 
 const client = new Client('http://localhost:5000')
 
-const result = await client.service.echo('hello world')
+const result = await client.execute('service/echo', 'hello world')
 
 ```
 ## Overview
