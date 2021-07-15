@@ -6,7 +6,9 @@ export const Add   = Type.Function([Type.Number(), Type.Number()], Type.Number()
 
 export class Authorize {
     map(request: any) {
-        return { a: 'dave' }
+        return { 
+            username: 'dave'
+         }
     }
 }
 
@@ -20,6 +22,10 @@ export class MathService {
         console.log('context:connect', context.identity)
     })
     
+    public close = this.service.handler(context => {
+        console.log('context:close', context.identity)
+    })
+
     public add = this.service.method(Add, (context, a, b) => {
         console.log(context.identity)
         return a + b
@@ -27,11 +33,8 @@ export class MathService {
 
     public remove = this.service.method(Add, (context, a, b) => {
         console.log(context.identity)
+        context.host.close(context.id)
         return a - b
-    })
-
-    public close = this.service.handler(context => {
-        console.log('context:close', context.identity)
     })
 }
 
