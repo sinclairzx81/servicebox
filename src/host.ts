@@ -28,9 +28,12 @@ THE SOFTWARE.
 
 import Ajv, { ValidateFunction }    from 'ajv'
 import { TSchema, TFunction, TAny } from '@sinclair/typebox'
+import { Context }                  from './context'
 import { Handler }                  from './handler'
 import { Method }                   from './method'
 import { Event }                    from './event'
+
+import * as uuid                    from 'uuid'
 import * as http                    from 'http'
 import * as exception               from './exception'
 import * as protocol                from './protocol'
@@ -92,6 +95,10 @@ export class Host {
         }
     }
 
+    // ---------------------------------------------------------------------
+    // Service IO
+    // ---------------------------------------------------------------------
+
     /** Reads a buffer from the http request stream. */
     private readBuffer(request: http.IncomingMessage): Promise<Buffer> {
         return new Promise((resolve, reject) => {
@@ -106,6 +113,10 @@ export class Host {
     private async writeBuffer(response: http.ServerResponse, buffer: Buffer): Promise<void> {
         return new Promise(resolve => response.write(buffer, () => response.end(() => resolve())))
     }
+
+    // ---------------------------------------------------------------------
+    // Service Protocol
+    // ---------------------------------------------------------------------
 
     /** Reads a json object from the http request stream. */
     private async readBatchProtocolRequest(request: http.IncomingMessage): Promise<protocol.BatchProtocolRequest> {
@@ -134,8 +145,26 @@ export class Host {
         // todo: implement server response
     }
 
-    public request(request: http.IncomingMessage, response: http.ServerResponse) {
-        // todo: implement request logic here
+    public async request(request: http.IncomingMessage, response: http.ServerResponse) {
+        const requestid = uuid.v4()
+        try {
+            const batch_request = await this.readBatchProtocolRequest(request)
+            for(const request of batch_request) {
+                if(!this.methods.has(request.method)) throw new exception.MethodNotFoundException({ })
+                
+                const method = this.methods.get(request.method)!
+                const context = new Context(requestid, this, {})
+                method.execute(context, ...request.params)
+                
+            }
+        } catch(error) {
+            if(!(error instanceof exception.Exception)) {
+
+            } else {
+                
+            }
+        }
+        
     }
 
     /** Closes the connection with the given id */

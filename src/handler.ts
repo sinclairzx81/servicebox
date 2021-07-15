@@ -26,9 +26,9 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Static, TFunction, TSchema, UnionToIntersect } from '@sinclair/typebox'
-import { MiddlewareArray, Middleware }          from './middleware'
-import { Context }                              from './context'
+import { UnionToIntersect }            from '@sinclair/typebox'
+import { MiddlewareArray, Middleware } from './middleware'
+import { Context }                     from './context'
 
 // ------------------------------------------------------------------------
 // Handler
@@ -41,6 +41,7 @@ export type HandlerReturn = Promise<any> | any
 export type HandlerArguments<M extends MiddlewareArray> = [HandlerContext<M>]
 export type HandlerCallback<M extends MiddlewareArray> = (...args: HandlerArguments<M>) => Promise<HandlerReturn> | HandlerReturn
 
+/** A handler for receiving socket events */
 export class Handler<M extends MiddlewareArray> {
     constructor(
         public readonly middleware: M,
