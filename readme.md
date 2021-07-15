@@ -9,25 +9,24 @@
 </div>
 
 ```typescript
-import { Host, Context, Type, Stream } from '@sinclair/servicebox'
-
+import { Host, Service, Type } from '@sinclair/servicebox'
 
 // --------------------------------------------------------------
-// Server
+// Echo Service
 // --------------------------------------------------------------
 
 export const Echo = Type.Function([Type.String()], Type.String())
 
-export class Service {
+export class EchoService {
 
-    private readonly context = new Context([])
+    private readonly service = new Service([])
 
-    public echo = this.context.method(Echo, (context, arg) => arg)
+    public echo = this.service.method(Echo, (context, arg) => arg)
 }
 
 const host = new Host({
 
-    service: new Service()
+    service: new EchoService()
 })
 
 host.listen(5000)
