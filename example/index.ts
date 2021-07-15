@@ -17,7 +17,7 @@ export class MathService {
     public readonly $add    = this.service.event(AddEvent)
     public readonly $remove = this.service.event(AddEvent)
     public readonly $update = this.service.event(AddEvent)
-
+    
     public connect = this.service.handler(context => {
         console.log('context:connect', context.identity)
     })

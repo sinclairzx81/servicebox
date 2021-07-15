@@ -28,10 +28,7 @@ export class EchoService {
 // Host
 // --------------------------------------------------------------
 
-const host = new Host({
-
-    service: new EchoService()
-})
+const host = new Host(new EchoService())
 
 host.listen(5000)
 
@@ -41,7 +38,7 @@ host.listen(5000)
 
 const client = new Client('http://localhost:5000')
 
-const result = await client.execute('service/echo', 'hello world')
+const result = await client.execute('echo', 'hello world')
 
 ```
 ## Overview
