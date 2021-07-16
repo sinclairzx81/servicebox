@@ -162,10 +162,10 @@ export class Host {
     private async executeRequest(context_id: string, request: http.IncomingMessage, rpc_request: protocol.ProtocolRequest): Promise<protocol.ProtocolResponse>{
         try {
             if(!this.methods.has(rpc_request.method)) throw new exception.MethodNotFoundException({ })
-            const method = this.methods.get(rpc_request.method)!
+            const method       = this.methods.get(rpc_request.method)!
             const context_data = await this.executeMiddleware(request, method.middleware)
-            const context  = new Context(context_id, this, context_data)
-            const [service_name, method_name] = rpc_request.method.split('/')
+            const context      = new Context(context_id, this, context_data)
+            const [service_name] = rpc_request.method.split('/')
             if(this.handlers.has(`${service_name}/connect`)) {
                 const handler = this.handlers.get(`${service_name}/connect`)!
                 handler.execute(context)
@@ -189,13 +189,26 @@ export class Host {
         const context_id = uuid.v4()
         const rpc_batch_request = await this.readBatchProtocolRequest(request)
         const rpc_batch_response: protocol.ProtocolResponse[] = []
+        // execute all middleware for each call.
+        for(const rpc_request of rpc_batch_request) {
+            // todo: for each method in the batch, we need to execute
+            // all the middleware each service type. Ideally we only
+            // want to run middleware at a service level once.
+
+            // note: that the context should be uniform across the request on
+            // a per service level. In the instance that the service the
+            // service request fails, then we want to respond with an error
+            // for calls to that service made during a batched request.
+        }
+
+
         for(const rpc_request of rpc_batch_request) {
             const response = await this.executeRequest(context_id, request, rpc_request)
             rpc_batch_response.push(response)
         }
         await this.writeBatchProtocolResponse(response, rpc_batch_response)
     }
-    
+
     /** Closes the connection with the given id */
     public close(id: string) {
         /** Cannot terminate connection */
