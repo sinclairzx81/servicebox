@@ -37,7 +37,7 @@ interface JsonRpcRequest {
 
 type MethodCall = {
     method: string
-    args: any[]
+    params: any[]
 }
 
 export class Client {
@@ -45,7 +45,7 @@ export class Client {
     constructor(private readonly endpoint: string) {}
 
     public async execute(method: string, ...args: any[]): Promise<any> {
-        const results = await this.executeMany([{method, args}])
+        const results = await this.executeMany([{method, params: args}])
         return results[0]
     }
 
@@ -55,7 +55,7 @@ export class Client {
             jsonrpc: '2.0',
             id: this.ordinal++,
             method: call.method,
-            params: call.args,
+            params: call.params,
         }))
         const batch_response = await this.post(batch_request)
         const results: any[] = []

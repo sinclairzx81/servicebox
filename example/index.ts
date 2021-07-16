@@ -19,11 +19,11 @@ export class MathService {
     public readonly $update = this.service.event(AddEvent)
 
     public connect = this.service.handler(context => {
-        console.log('context:connect', context.identity)
+        console.log('context:connect', context.id, context.identity)
     })
     
     public close = this.service.handler(context => {
-        console.log('context:close', context.identity)
+        console.log('context:close', context.id, context.identity)
     })
 
     public add = this.service.method(Add, (context, a, b) => {
@@ -50,7 +50,12 @@ async function start() {
 
     const client = new Client('http://localhost:5000')
 
-    const result = await client.execute('math/add', 1, 2)
+    const result = await client.executeMany([
+        { method: 'math/add', params: [1, 2] },
+        { method: 'math/add', params: [3, 4] },
+        { method: 'math/add', params: [5, 6] },
+        { method: 'math/add', params: [7, 8] },
+    ])
 
     console.log('result', result)
 }
