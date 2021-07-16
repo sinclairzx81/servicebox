@@ -1,14 +1,14 @@
-import { Host, Type, Service, Client} from '@sinclair/servicebox'
+import { ServiceType, Type, Service, Request, Client, Handler, Host} from '@sinclair/servicebox'
 
 export const AddEvent = Type.Tuple([Type.Number(), Type.Number()])
 
 export const Add   = Type.Function([Type.Number(), Type.Number()], Type.Number())
 
 export class Authorize {
-    map(request: any) {
-        return { 
-            username: 'dave'
-         }
+    map(request: Request) {
+        return {
+            username: 'hayden'
+        }
     }
 }
 
@@ -39,26 +39,20 @@ export class MathService {
 }
 
 const host = new Host({
-   
-   math: new MathService()
+    math: new MathService()
 })
-
-
 host.listen(5000)
 
-async function start() {
 
-    const client = new Client('http://localhost:5000')
 
-    const result = await client.executeMany([
-        { method: 'math/add', params: [1, 2] },
-        { method: 'math/add', params: [3, 4] },
-        { method: 'math/add', params: [5, 6] },
-        { method: 'math/add', params: [7, 8] },
-    ])
+const client = new Client('http://localhost:5000')
 
-    console.log('result', result)
-}
+client.executeMany([
+    { method: 'math/add', params: [1, 2] },
+    { method: 'math/add', params: [1, 2] },
+    { method: 'math/add', params: [1, 2] },
+    { method: 'math/add', params: [1, 2] },
+    { method: 'math/add', params: [1, 2] }
+])
 
-start()
 

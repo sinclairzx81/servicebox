@@ -19,7 +19,7 @@ export const Echo = Type.Function([Type.String()], Type.String())
 
 export class EchoService {
 
-    private readonly service = Service.Create([])
+    private readonly service = new Service([])
 
     public echo = this.service.method(Echo, (context, arg) => arg)
 }
@@ -28,7 +28,7 @@ export class EchoService {
 // Host
 // --------------------------------------------------------------
 
-const host = new Host.Http(new EchoService())
+const host = new Host(new EchoService())
 
 host.listen(5000)
 

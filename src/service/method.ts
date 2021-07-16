@@ -28,10 +28,10 @@ THE SOFTWARE.
 
 import { TFunction, TSchema, Static, UnionToIntersect } from '@sinclair/typebox'
 import { MiddlewareArray, Middleware }                  from './middleware'
+import { Context }                                      from './context'
 import * as exception                                   from './exception'
 import addFormats                                       from 'ajv-formats'
 import Ajv, { ValidateFunction }                        from 'ajv'
-import { Context } from './context'
 
 // ------------------------------------------------------------------------
 // Static Inference
@@ -80,16 +80,14 @@ export class Method<M extends MiddlewareArray, F extends TFunction<TSchema[], TS
         public readonly callback:   MethodCallback<M, F>
     ) {
         const ajv = addFormats(new Ajv({ allErrors: true }), [
-            'date-time', 'time', 'date', 'email', 'hostname', 
-            'ipv4', 'ipv6', 'uri', 'uri-reference', 'uuid', 
-            'uri-template', 'json-pointer',  'relative-json-pointer', 
-            'regex'
+            'date-time', 'time', 'date', 'email', 'hostname', 'ipv4', 'ipv6', 'uri', 'uri-reference', 'uuid', 
+            'uri-template', 'json-pointer',  'relative-json-pointer', 'regex'
         ]).addKeyword('kind').addKeyword('modifier')
         this.paramsValidators = schema.arguments.map(schema => ajv.compile(schema))
         this.returnsValidator = ajv.compile(schema.returns)
     }
 
-    private assertParams(values: unknown[]) {
+    private assertArguments(values: unknown[]) {
         try {
             for(let i = 0; i < values.length; i++) {
                 const validator = this.paramsValidators[i]
@@ -105,17 +103,15 @@ export class Method<M extends MiddlewareArray, F extends TFunction<TSchema[], TS
         }
     }
 
-    private assertReturns(value: unknown) {
-        if(!this.returnsValidator(value)) {
-            throw new exception.InternalErrorException('Method returned unexpected value')
-        }
+    private assertReturn(value: unknown) {
+        if(!this.returnsValidator(value)) throw new exception.InternalErrorException('Method returned unexpected value')
     }
 
     /** Executes this function with the given params */
     public async execute(...params: MethodArguments<M, F>): Promise<MethodReturn<F>> {
-        this.assertParams(params.slice(1))
+        this.assertArguments(params.slice(1))
         const result = await this.callback.apply(null, params)
-        this.assertReturns(result)
+        this.assertReturn(result)
         return result as MethodReturn<F>
     }
 }

@@ -26,20 +26,26 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Request }  from './request'
-
-// ------------------------------------------------------------------------
-// Middleware
-// ------------------------------------------------------------------------
-
-export type Middleware<Context extends object>  = {
-    
-    map: (request: Request) => Context | Promise<Context> | null | Promise<null>
+export interface RequestOptions {
+    method?:      string,
+    url?:         string,
+    headers?:     Map<string, string>,
+    querystring?: Map<string, string>,
+    ipAddress?:   string
 }
 
-// ------------------------------------------------------------------------
-// MiddlewareArray
-// ------------------------------------------------------------------------
+export class Request {
+    public readonly method:      string
+    public readonly url:         string
+    public readonly headers:     Map<string, string>
+    public readonly querystring: Map<string, string>
+    public readonly ipAddress:   string
 
-export type MiddlewareArray = Middleware<object>[]
-
+    constructor(options: RequestOptions) {
+        this.method      = options.method || 'GET'
+        this.url         = options.url || ''
+        this.headers     = options.headers || new Map<string, string>()
+        this.querystring = options.querystring || new Map<string, string>()
+        this.ipAddress   = options.ipAddress || ''
+    }
+}
