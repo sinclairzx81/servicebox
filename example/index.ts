@@ -60,15 +60,18 @@ const host = new Host({
 host.listen(5000)
 
 
+async function start() {
 
-const client = new Client('http://localhost:5000')
+    const client = new Client('http://localhost:5000')
 
-client.executeMany([
-    { method: 'math/add', params: [1, 2] },
-    { method: 'records/add', params: [1, 2] },
-    { method: 'math/add', params: [1, 2] },
-    { method: 'math/add', params: [1, 2] },
-    { method: 'math/add', params: [1, 2] }
-])
+    await client.executeMany([
+        { method: 'math/add', params: [1, 2] },
+        { method: 'records/add', params: [1, 2] },
+        { method: 'math/add', params: [1, 2] },
+        { method: 'math/add', params: [1, 2] },
+        { method: 'math/add', params: [1, 2] }
+    ])
+}
 
 
+start()
