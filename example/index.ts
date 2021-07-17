@@ -11,19 +11,35 @@ export class Authorize {
         }
     }
 }
+export class RecordService {
+    public service = new Service([new Authorize()])
 
-export class MathService {
-    public readonly service = new Service([new Authorize()])
-    public readonly $add    = this.service.event(AddEvent)
-    public readonly $remove = this.service.event(AddEvent)
-    public readonly $update = this.service.event(AddEvent)
-
-    public connect = this.service.handler(context => {
-        console.log('context:connect', context.id, context.identity)
+    public open = this.service.handler(context => {
+        console.log('records:open', context.id, context.identity)
     })
-    
+
     public close = this.service.handler(context => {
-        console.log('context:close', context.id, context.identity)
+        console.log('records:close', context.id, context.identity)
+    })
+
+    public add = this.service.method(Add, (context, a, b) => {
+        console.log(context.identity)
+        return a + b
+    })
+}
+export class MathService {
+    public service = new Service([new Authorize()])
+
+    public $add    = this.service.event(AddEvent)
+    public $remove = this.service.event(AddEvent)
+    public $update = this.service.event(AddEvent)
+    
+    public open = this.service.handler(context => {
+        console.log('math:open', context.id)
+    })
+
+    public $close = this.service.handler(context => {
+        console.log('math:close', context.id)
     })
 
     public add = this.service.method(Add, (context, a, b) => {
@@ -32,13 +48,13 @@ export class MathService {
     })
 
     public remove = this.service.method(Add, (context, a, b) => {
-        console.log(context.identity)
         context.host.close(context.id)
         return a - b
     })
 }
 
 const host = new Host({
+    records: new RecordService(),
     math: new MathService()
 })
 host.listen(5000)
@@ -49,7 +65,7 @@ const client = new Client('http://localhost:5000')
 
 client.executeMany([
     { method: 'math/add', params: [1, 2] },
-    { method: 'math/add', params: [1, 2] },
+    { method: 'records/add', params: [1, 2] },
     { method: 'math/add', params: [1, 2] },
     { method: 'math/add', params: [1, 2] },
     { method: 'math/add', params: [1, 2] }

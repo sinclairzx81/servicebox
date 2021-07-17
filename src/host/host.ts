@@ -50,24 +50,24 @@ export class ServiceType {
         this.handlers = new Map<string, Handler<any[]>>()
         for (const [name, handler] of Object.entries(service)) {
             if (!(handler instanceof Handler)) continue
-            const handler_name = name.replace(/\$/g, '')
+            const handler_name = name.replace('$', '')
             this.handlers.set(handler_name, handler)
         }
         for (const [name, event] of Object.entries(service)) {
             if (!(event instanceof Event)) continue
-            const event_name = name.replace(/\$/g, '')
+            const event_name = name.replace('$', '')
             this.events.set(event_name, event)
         }
         for (const [name, method] of Object.entries(service)) {
             if (!(method instanceof Method)) continue
-            const method_name = name.replace(/\$/g, '')
+            const method_name = name.replace('$', '')
             this.methods.set(method_name, method)
         }
     }
 
-    public async connect(context: Context<any>): Promise<any> {
-        if (!this.handlers.has('connect')) return
-        const handler = this.handlers.get('connect')!
+    public async open(context: Context<any>): Promise<any> {
+        if (!this.handlers.has('open')) return
+        const handler = this.handlers.get('open')!
         handler.execute(context)
     }
 
@@ -207,7 +207,7 @@ export class Host {
             if(set.has(service_name)) continue
             set.add(service_name)
             const service = this.services.get(service_name)!
-            service.connect(rpc_context)
+            service.open(rpc_context)
         }
     }
 
