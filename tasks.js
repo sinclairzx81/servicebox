@@ -20,7 +20,7 @@ export async function spec(target = 'target/spec') {
 
 // Builds this package and packs it for npm publishing.
 export async function build(target = 'target/build') {
-    await folder(`${target}`).delete().exec()
+    await clean()
     await shell(`tsc -p ./src/tsconfig.json --outDir ${target}`).exec()
     await folder(`${target}`).add('package.json').exec()
     await folder(`${target}`).add('readme.md').exec()
