@@ -1,6 +1,6 @@
 {
   "name": "@sinclair/servicebox",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Typed Web Services for NodeJS",
   "main": "./servicebox.js",
   "types": "./servicebox.d.ts",
@@ -27,7 +27,7 @@
     "test": "smoke-task spec"
   },
   "dependencies": {
-    "@sinclair/typebox": "^0.24.0",
+    "@sinclair/typebox": "^0.23.4",
     "ajv": "^7.1.1",
     "ajv-formats": "^1.5.1"
   },
