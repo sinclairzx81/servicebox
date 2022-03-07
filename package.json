@@ -27,7 +27,7 @@
     "test": "smoke-task spec"
   },
   "dependencies": {
-    "@sinclair/typebox": "^0.23.4",
+    "@sinclair/typebox": "^0.24.0",
     "ajv": "^7.1.1",
     "ajv-formats": "^1.5.1"
   },
